@@ -25,7 +25,7 @@ namespace KerbalKonstructs.LaunchSites
 		public GameObject GameObject;
 		public PSystemSetup.SpaceCenterFacility facility;
 
-		public LaunchSite(string sName, string sAuthor, SiteType sType, Texture sLogo, Texture sIcon, string sDescription, string sDevice, float fOpenCost, float fCloseValue, string sOpenCloseState, GameObject gameObject, PSystemSetup.SpaceCenterFacility newFacility)
+		public LaunchSite(string sName, string sAuthor, SiteType sType, Texture sLogo, Texture sIcon, string sDescription, string sDevice, float fOpenCost, float fCloseValue, string sOpenCloseState, GameObject gameObject, PSystemSetup.SpaceCenterFacility newFacility = null)
 		{
 			name = sName;
 			author = sAuthor;
