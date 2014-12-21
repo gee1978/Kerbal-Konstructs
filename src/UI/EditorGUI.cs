@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using LibNoise.Unity.Operator;
 using UnityEngine;
 using System.Linq;
+using Upgradeables;
+using UpgradeLevel = Upgradeables.UpgradeableObject.UpgradeLevel;
 
 namespace KerbalKonstructs.UI
 {
@@ -41,6 +43,7 @@ namespace KerbalKonstructs.UI
 		Rect managerRect = new Rect(10, 25, 400, 405);
 		Rect facilityRect = new Rect(150, 75, 350, 400);
 		Rect NGSRect = new Rect(250, 50, 350, 150);
+		Rect KSCmanagerRect = new Rect(150, 50, 400, 400);
 
 		private GUIStyle listStyle = new GUIStyle();
 		private GUIStyle navStyle = new GUIStyle();
@@ -77,6 +80,11 @@ namespace KerbalKonstructs.UI
 			siteTypeMenu = new ComboBox(siteTypeOptions[0], siteTypeOptions, "button", "box", null, listStyle);
 		}
 
+		public void drawKSCManager()
+		{
+			KSCmanagerRect = GUI.Window(0xC00B1E2, KSCmanagerRect, drawKSCmanagerWindow, "Base Boss : KSC Manager");
+		}
+
 		public void drawManager(StaticObject obj)
 		{
 			if (obj != null)
@@ -85,7 +93,7 @@ namespace KerbalKonstructs.UI
 					updateSelection(obj);
 
 				if (managingFacility)
-					facilityRect = GUI.Window(0xB00B1E1, facilityRect, drawFacilityManagerWindow, "Base Boss Facility Manager");
+					facilityRect = GUI.Window(0xB00B1E1, facilityRect, drawFacilityManagerWindow, "Base Boss : Facility Manager");
 			}
 
 			if (onNGS)
@@ -128,6 +136,17 @@ namespace KerbalKonstructs.UI
 			}
 			else
 				return false;
+		}
+
+		void drawKSCmanagerWindow(int WindowID)
+		{
+			scrollPos = GUILayout.BeginScrollView(scrollPos);
+			foreach (UpgradeableFacility facility in GameObject.FindObjectsOfType<UpgradeableFacility>())
+			{
+				GUILayout.Button(facility.name + " | Lvl: " + facility.FacilityLevel + "/" + facility.MaxLevel);
+			}
+			GUILayout.EndScrollView();
+			GUI.DragWindow(new Rect(0, 0, 10000, 10000));
 		}
 
 		public float fRangeToTarget = 0f;

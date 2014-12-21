@@ -4,6 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using Upgradeables;
+using UpgradeLevel = Upgradeables.UpgradeableObject.UpgradeLevel;
 
 // R and T LOG
 // 14112014 ASH
@@ -35,6 +37,9 @@ namespace KerbalKonstructs.LaunchSites
 				// Debug.Log("KK: Creating launch site " + obj.getSetting("LaunchSiteName"));
 				obj.gameObject.transform.name = (string) obj.getSetting("LaunchSiteName");
 				obj.gameObject.name = (string) obj.getSetting("LaunchSiteName");
+				// var x = obj.gameObject.AddComponent(typeof(UpgradeableFacility)) as UpgradeableFacility;
+				// x.SetLevel(0);
+				// x.setNormLevel(0);
 
 				foreach (FieldInfo fi in PSystemSetup.Instance.GetType().GetFields(BindingFlags.NonPublic | BindingFlags.Instance))
 				{

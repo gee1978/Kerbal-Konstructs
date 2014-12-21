@@ -32,6 +32,7 @@ namespace KerbalKonstructs
 		private EditorGUI facilitymanager = new EditorGUI();
 		private LaunchSiteSelectorGUI selector = new LaunchSiteSelectorGUI();
 		private MapIconManager mapIconManager = new MapIconManager();
+		private EditorGUI KSCFacilityManager = new EditorGUI();
 
 		private Dictionary<UpgradeableFacility, int> facilityLevels = new Dictionary<UpgradeableFacility,int>();
 
@@ -40,11 +41,13 @@ namespace KerbalKonstructs
 		private Boolean showSelector = false;
 		private Boolean showBaseManager = false;
 		private Boolean showMapManager = false;
+		private Boolean showKSCmanager = false;
 
 		// App Buttons
 		private ApplicationLauncherButton siteSelector;
 		private ApplicationLauncherButton baseManager;
 		private ApplicationLauncherButton mapManager;
+		private ApplicationLauncherButton KSCmanager;
 
 		// Configurable variables
 		[KSPField]
@@ -189,32 +192,22 @@ namespace KerbalKonstructs
 
 		void OnKSCFacilityUpgraded(Upgradeables.UpgradeableFacility Facility, int iLevel)
 		{
-			/* Debug.Log("KK: FacilityUpgraded " + Facility + " " + iLevel);
-			if (facilityLevels.ContainsKey(Facility))
-			{
-				facilityLevels.Remove(Facility);
-				facilityLevels.Add(Facility, iLevel);
-			} */
+			Debug.Log("KK: FacilityUpgraded " + Facility + " " + iLevel);
 		}
 
 		void OnKSCFacilityUpgrading(Upgradeables.UpgradeableFacility Facility, int iLevel)
 		{
-			// Debug.Log("KK: FacilityUpgrading " + Facility + " " + iLevel);
+			Debug.Log("KK: FacilityUpgrading " + Facility + " " + iLevel);
 		}
 
 		void OnUpgradeableObjLevelChange(Upgradeables.UpgradeableObject uObject, int iLevel)
 		{
-			/* Debug.Log("KK: UpgradeableObjLevelChange " + uObject + " " + iLevel);
-
-			UpgradeableFacility uFacility = uObject as UpgradeableFacility;
-
-			if (uFacility != null && facilityLevels.ContainsKey(uFacility))
-				uFacility.SetLevel(facilityLevels[uFacility]); */
+			Debug.Log("KK: UpgradeableObjLevelChange " + uObject + " " + iLevel);
 		}
 
 		void OnDoshChanged(double amount, TransactionReasons reason)
 		{
-			// Debug.Log("KK: Funds changed - " + amount + " because " + reason);
+			Debug.Log("KK: Funds changed - " + amount + " because " + reason);
 		}
 
 		void OnVesselRecoveryRequested(Vessel data)
@@ -256,6 +249,9 @@ namespace KerbalKonstructs
 
 				if (mapManager == null || !ApplicationLauncher.Instance.Contains(mapManager, out vis))
 					mapManager = ApplicationLauncher.Instance.AddModApplication(onMapManagerOn, onMapManagerOff, doNothing, doNothing, doNothing, doNothing, ApplicationLauncher.AppScenes.TRACKSTATION | ApplicationLauncher.AppScenes.MAPVIEW, GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/BaseManagerIcon", false));
+
+				if (KSCmanager == null || !ApplicationLauncher.Instance.Contains(KSCmanager, out vis))
+					KSCmanager = ApplicationLauncher.Instance.AddModApplication(onKSCmanagerOn, onKSCmanagerOff, doNothing, doNothing, doNothing, doNothing, ApplicationLauncher.AppScenes.SPACECENTER, GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/BaseManagerIcon", false));
 			}
 		}
 
@@ -267,90 +263,12 @@ namespace KerbalKonstructs
 
 		public void LoadState(ConfigNode configNode)
 		{
-			/* Debug.Log("KK: LoadState");
-			facilityLevels.Clear();
-			var node = configNode.GetNode("KKUpgradeableFacilities");
-			if (node == null)
-			{
-				foreach (UpgradeableFacility facility in GameObject.FindObjectsOfType<UpgradeableFacility>())
-				{
-					facility.SetLevel(0);
-					facilityLevels.Add(facility, 0);
-				}
-			}
-			else
-			{
-				foreach (UpgradeableFacility facility in GameObject.FindObjectsOfType<UpgradeableFacility>())
-				{
-					var facilityNode = node.GetNode(facility.id);
-					int ilevel;
-					int.TryParse(facilityNode.GetValue("lvl"), out ilevel);
-
-					if (facilityNode == null)
-					{
-						facility.SetLevel(0);
-						facilityLevels.Add(facility, 0);
-					}
-					else
-					{
-						facility.SetLevel(ilevel);
-						facilityLevels.Add(facility, ilevel);
-					}
-				}
-			} */
+			Debug.Log("KK: LoadState");
 		}
 
 		public void SaveState(ConfigNode configNode)
 		{
-/*			Debug.Log("KK: SaveState");
-			var node = configNode.GetNode("KKUpgradeableFacilities");
-			facilityLevels.Clear();
-			if (node == null)
-			{
-				Debug.Log("KK: Creating KKUpgradeableFacilities node");
-				node = configNode.AddNode("KKUpgradeableFacilities");
-
-				Debug.Log("KK: Initialising facility levels");
-				foreach (UpgradeableFacility facility in GameObject.FindObjectsOfType<UpgradeableFacility>())
-				{
-					var facilityNode = node.GetNode(facility.id);
-					if (facilityNode == null)
-					{
-						Debug.Log("KK: Initialise " + facility.id + " to level 0");
-						facility.SetLevel(0);
-
-						facilityNode = node.AddNode(facility.id);
-						facilityNode.AddValue("lvl", "0");
-
-						facilityLevels.Add(facility, 0);
-					}
-				}
-			}
-			else
-			{
-				Debug.Log("KK: Saving facility levels");
-				foreach (UpgradeableFacility facility in GameObject.FindObjectsOfType<UpgradeableFacility>())
-				{
-					var facilityNode = node.GetNode(facility.id);
-					UpgradeLevel ilevel = facility.CurrentLevel;
-					
-					if (facilityNode == null)
-					{
-						Debug.Log("KK: Save initialise " + facility.id + " to level " + ilevel);
-						facilityNode = node.AddNode(facility.id);
-						facilityNode.AddValue("lvl", ilevel);
-						facilityLevels.Add(facility, 0);
-					}
-					else
-					{
-						Debug.Log("KK: Save " + facility.id + " to level " + ilevel);
-						facilityNode.RemoveNode(facility.id);
-						facilityNode = node.AddNode(facility.id);
-						facilityNode.AddValue("lvl", ilevel);
-						facilityLevels.Add(facility, ilevel);
-					}
-				}
-			} */
+			Debug.Log("KK: SaveState");
 		}
 
 		void onLevelWasLoaded(GameScenes data)
@@ -381,12 +299,6 @@ namespace KerbalKonstructs
 
 			if (data.Equals(GameScenes.SPACECENTER))
 			{
-				/* foreach (var facilityLevel in facilityLevels)
-				{
-					facilityLevel.Key.SetLevel(facilityLevel.Value);
-				}
-				facilityLevels.Clear(); */
-
 				// ASH 04112014 Likely responsible for camera locks in the flight and space centre scenes
 				InputLockManager.RemoveControlLock("KKEditorLock");
 				currentBody = KKAPI.getCelestialBody("Kerbin");
@@ -400,6 +312,7 @@ namespace KerbalKonstructs
 				}
 				
 				something = false;
+				//InitialisedFacilities = false;
 			}
 
 			if (data.Equals(GameScenes.MAINMENU))
@@ -705,14 +618,63 @@ namespace KerbalKonstructs
 				camControl.disable();
 		}
 
+
+
 		void LateUpdate()
 		{
-			/* foreach (var facilityLevel in facilityLevels)
+			Boolean InitialisedFacilities = false;
+			//if (!InitialisedFacilities)
 			{
-				facilityLevel.Key.SetLevel(facilityLevel.Value);
-				Debug.Log("KK: Set facility level " + facilityLevel.Key + " " + facilityLevel.Value);
+				string saveConfigPath = string.Format("{0}saves/{1}/persistent.sfs", KSPUtil.ApplicationRootPath, HighLogic.SaveFolder);
+				if (File.Exists(saveConfigPath))
+				{
+					//Debug.Log("KK: Found persistent.sfs");
+					ConfigNode rootNode = ConfigNode.Load(saveConfigPath);
+					ConfigNode rootrootNode = rootNode.GetNode("GAME");
+					foreach (ConfigNode ins in rootrootNode.GetNodes())
+					{
+						// Debug.Log("KK: ConfigNode is " + ins);
+						if (ins.GetValue("name") == "ScenarioUpgradeableFacilities")
+						{
+							//Debug.Log("KK: Found ScenarioUpgradeableFacilities in persistent.sfs");
+
+							foreach (var s in new List<string> { 
+							"SpaceCenter/LaunchPad", 
+							"SpaceCenter/Runway", 
+							"SpaceCenter/VehicleAssemblyBuilding", 
+							"SpaceCenter/SpaceplaneHangar", 
+							"SpaceCenter/TrackingStation", 
+							"SpaceCenter/AstronautComplex", 
+							"SpaceCenter/MissionControl", 
+							"SpaceCenter/ResearchAndDevelopment",
+							"SpaceCenter/Administration",
+							"SpaceCenter/FlagPole" })
+							{
+								ConfigNode n = ins.GetNode(s);
+								if (n == null)
+								{
+									Debug.Log("KK: Could not find " + s + " node. Creating node.");
+									n = ins.AddNode(s);
+									n.AddValue("lvl", 0);
+									rootNode.Save(saveConfigPath);
+									InitialisedFacilities = true;
+								}
+							}
+							break;
+						}
+					}
+
+					if (InitialisedFacilities)
+					{
+						rootNode.Save(saveConfigPath);
+						foreach (UpgradeableFacility facility in GameObject.FindObjectsOfType<UpgradeableFacility>())
+						{
+							facility.SetLevel(0);
+						}
+					}
+					//InitialisedFacilities = true;
+				}
 			}
-			facilityLevels.Clear(); */
 
 			if (camControl.active)
 			{
@@ -794,6 +756,14 @@ namespace KerbalKonstructs
 
 			if (showSelector && (HighLogic.LoadedScene.Equals(GameScenes.EDITOR)))//Disable scene selector when not in the editor
 				selector.drawSelector();
+
+			if (HighLogic.LoadedScene == GameScenes.SPACECENTER)
+			{
+				if (showKSCmanager)
+				{
+					KSCFacilityManager.drawKSCManager();
+				}
+			}
 
 			if (HighLogic.LoadedScene == GameScenes.FLIGHT)
 			{
@@ -879,6 +849,11 @@ namespace KerbalKonstructs
 			return currentBody;
 		}
 
+		void onKSCmanagerOn()
+		{
+			showKSCmanager = true;
+		}
+
 		void onSiteSelectorOn()
 		{
 			PersistenceFile<LaunchSite>.LoadList(LaunchSiteManager.AllLaunchSites, "LAUNCHSITES", "KK");
@@ -895,6 +870,11 @@ namespace KerbalKonstructs
 		{
 			PersistenceFile<LaunchSite>.LoadList(LaunchSiteManager.AllLaunchSites, "LAUNCHSITES", "KK");
 			showMapManager = true;
+		}
+
+		void onKSCmanagerOff()
+		{
+			showKSCmanager = false;
 		}
 
 		void onSiteSelectorOff()
