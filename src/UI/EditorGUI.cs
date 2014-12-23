@@ -37,7 +37,7 @@ namespace KerbalKonstructs.UI
 		Boolean managingFacility = false;
 		Boolean onNGS = false;
 
-		Rect toolRect = new Rect(150, 25, 310, 420);
+		Rect toolRect = new Rect(150, 25, 310, 440);
 		Rect editorRect = new Rect(10, 25, 520, 520);
 		Rect siteEditorRect = new Rect(400, 50, 340, 480);
 		Rect managerRect = new Rect(10, 25, 400, 405);
@@ -96,13 +96,21 @@ namespace KerbalKonstructs.UI
 					facilityRect = GUI.Window(0xB00B1E1, facilityRect, drawFacilityManagerWindow, "Base Boss : Facility Manager");
 			}
 
-			if (onNGS)
+			/* if (onNGS)
 			{
 				NGSRect = GUI.Window(0xB00B1E9, NGSRect, drawNGSWindow, "", navStyle);
-			}
+			} */
 
 			managerRect = GUI.Window(0xB00B1E2, managerRect, drawBaseManagerWindow, "Base Boss");
 
+		}
+
+		public void drawNGS()
+		{
+			if (KerbalKonstructs.instance.showNGS)
+			{
+				NGSRect = GUI.Window(0xB00B1E9, NGSRect, drawNGSWindow, "", navStyle);
+			}
 		}
 
 		public void drawEditor(StaticObject obj)
@@ -274,7 +282,15 @@ namespace KerbalKonstructs.UI
 
 		void drawNGSWindow(int windowID)
 		{
-			GUILayout.Box(sTargetSiteName, GUILayout.Height(20));
+			GUILayout.BeginHorizontal();
+				GUILayout.Box(sTargetSiteName, GUILayout.Height(20));
+				if (GUILayout.Button("X", GUILayout.Width(20), GUILayout.Height(15)))
+				{
+					KerbalKonstructs.instance.enableNGS = false;
+					KerbalKonstructs.instance.showNGS = false;
+				}
+			GUILayout.EndHorizontal();
+			
 			GUILayout.Box(fRangeToTarget + " m", GUILayout.Height(20));
 
 			GUILayout.BeginHorizontal();
@@ -400,7 +416,7 @@ namespace KerbalKonstructs.UI
 				GUILayout.BeginHorizontal();
 					KerbalKonstructs.instance.enableATC = GUILayout.Toggle(KerbalKonstructs.instance.enableATC, "Enable ATC", GUILayout.Width(175));
 					KerbalKonstructs.instance.enableNGS = GUILayout.Toggle(KerbalKonstructs.instance.enableNGS, "Enable NGS", GUILayout.Width(175));
-					onNGS = (KerbalKonstructs.instance.enableNGS);
+					KerbalKonstructs.instance.showNGS = (KerbalKonstructs.instance.enableNGS);
 				GUILayout.EndHorizontal();
 
 				GUILayout.Box("Base");
@@ -534,7 +550,7 @@ namespace KerbalKonstructs.UI
 			bool shouldUpdateSelection = false;
 			bool manuallySet = false;
 
-			GUILayout.BeginArea(new Rect(5, 25, 295, 410));
+			GUILayout.BeginArea(new Rect(5, 25, 295, 425));
 
 			GUILayout.Box((string)selectedObject.model.getSetting("title"));
 			GUILayout.Label("Hit enter after typing a value to apply.");

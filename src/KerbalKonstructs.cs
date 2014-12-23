@@ -28,11 +28,15 @@ namespace KerbalKonstructs
 		private StaticDatabase staticDB = new StaticDatabase();
 		private CameraController camControl = new CameraController();
 		private EditorGUI editor = new EditorGUI();
+		private EditorGUI eNGS = new EditorGUI();
 		private EditorGUI manager = new EditorGUI();
 		private EditorGUI facilitymanager = new EditorGUI();
 		private LaunchSiteSelectorGUI selector = new LaunchSiteSelectorGUI();
 		private MapIconManager mapIconManager = new MapIconManager();
 		private EditorGUI KSCFacilityManager = new EditorGUI();
+
+		public int iMenuCount = 0;
+		public Boolean InitialisedFacilities = false;
 
 		private Dictionary<UpgradeableFacility, int> facilityLevels = new Dictionary<UpgradeableFacility,int>();
 
@@ -42,6 +46,7 @@ namespace KerbalKonstructs
 		private Boolean showBaseManager = false;
 		private Boolean showMapManager = false;
 		private Boolean showKSCmanager = false;
+		public Boolean showNGS = false;
 
 		// App Buttons
 		private ApplicationLauncherButton siteSelector;
@@ -322,6 +327,9 @@ namespace KerbalKonstructs
 				LaunchSiteManager.setAllLaunchsitesClosed();
 				atMainMenu = true;
 				something = false;
+				iMenuCount = iMenuCount + 1;
+				InitialisedFacilities = false;
+				Debug.Log("KK: Reset InitialisedFacilities check");
 			}
 			
 			if (data.Equals(GameScenes.EDITOR))
@@ -618,12 +626,9 @@ namespace KerbalKonstructs
 				camControl.disable();
 		}
 
-
-
 		void LateUpdate()
 		{
-			Boolean InitialisedFacilities = false;
-			//if (!InitialisedFacilities)
+			if (HighLogic.LoadedScene == (GameScenes)5 && (!InitialisedFacilities))
 			{
 				string saveConfigPath = string.Format("{0}saves/{1}/persistent.sfs", KSPUtil.ApplicationRootPath, HighLogic.SaveFolder);
 				if (File.Exists(saveConfigPath))
@@ -672,7 +677,8 @@ namespace KerbalKonstructs
 							facility.SetLevel(0);
 						}
 					}
-					//InitialisedFacilities = true;
+					InitialisedFacilities = true;
+					Debug.Log("KK: InitialisedFacilities check complete");
 				}
 			}
 
@@ -775,6 +781,11 @@ namespace KerbalKonstructs
 				if (showBaseManager)
 				{
 					manager.drawManager(selectedObject);
+				}
+
+				if (showNGS)
+				{
+					eNGS.drawNGS();
 				}
 			}
 
