@@ -170,6 +170,7 @@ namespace KerbalKonstructs
 				KKAPI.addInstanceSetting("LaunchBCurrent", new ConfigFloat());
 				KKAPI.addModelSetting("TonsStMax", new ConfigFloat());
 				KKAPI.addInstanceSetting("TonsStCurrent", new ConfigFloat());
+				KKAPI.addInstanceSetting("LastCheck", new ConfigFloat());
 
 			// END Instance API ******
 
@@ -274,6 +275,26 @@ namespace KerbalKonstructs
 		public void SaveState(ConfigNode configNode)
 		{
 			Debug.Log("KK: SaveState");
+
+			/* //ConfigNode cnHolder = new ConfigNode();
+			Boolean bFoundKKStaticsNode = false;
+			foreach (ConfigNode ins in configNode.GetNodes("SCENARIO"))
+			{
+				if (ins.GetValue("Name") == "KKStatics")
+				{
+					//cnHolder = ins;
+					bFoundKKStaticsNode = true;
+				}
+			}
+
+			if (!bFoundKKStaticsNode)
+			{
+				Debug.Log("KK: No SCENARIO named KKStatics found. Making one.");
+				ConfigNode KKStaticsNode = new ConfigNode("SCENARIO");
+				KKStaticsNode.AddValue("Name", "KKStatics");
+				configNode.AddNode(KKStaticsNode);
+				//cnHolder = KKStaticsNode;
+			} */
 		}
 
 		void onLevelWasLoaded(GameScenes data)
@@ -693,47 +714,50 @@ namespace KerbalKonstructs
 				float alt = 0;
 				bool changed = false;
 
-				if (Input.GetKey(KeyCode.W))
+				if (showEditor)
 				{
-					pos.y += editor.getIncrement();
-					changed = true;
-				}
-				if (Input.GetKey(KeyCode.S))
-				{
-					pos.y -= editor.getIncrement();
-					changed = true;
-				}
-				if (Input.GetKey(KeyCode.D))
-				{
-					pos.x += editor.getIncrement();
-					changed = true;
-				}
-				if (Input.GetKey(KeyCode.A))
-				{
-					pos.x -= editor.getIncrement();
-					changed = true;
-				}
-				if (Input.GetKey(KeyCode.E))
-				{
-					pos.z += editor.getIncrement();
-					changed = true;
-				}
-				if (Input.GetKey(KeyCode.Q))
-				{
-					pos.z -= editor.getIncrement();
-					changed = true;
-				}
+					if (Input.GetKey(KeyCode.W))
+					{
+						pos.y += editor.getIncrement();
+						changed = true;
+					}
+					if (Input.GetKey(KeyCode.S))
+					{
+						pos.y -= editor.getIncrement();
+						changed = true;
+					}
+					if (Input.GetKey(KeyCode.D))
+					{
+						pos.x += editor.getIncrement();
+						changed = true;
+					}
+					if (Input.GetKey(KeyCode.A))
+					{
+						pos.x -= editor.getIncrement();
+						changed = true;
+					}
+					if (Input.GetKey(KeyCode.E))
+					{
+						pos.z += editor.getIncrement();
+						changed = true;
+					}
+					if (Input.GetKey(KeyCode.Q))
+					{
+						pos.z -= editor.getIncrement();
+						changed = true;
+					}
 				
-				// ASH 08112014 Fix clashing with camera zooming
-				if (Input.GetKey(KeyCode.RightBracket))
-				{
-					alt += editor.getIncrement();
-					changed = true;
-				}
-				if (Input.GetKey(KeyCode.LeftBracket))
-				{
-					alt -= editor.getIncrement();
-					changed = true;
+					// ASH 08112014 Fix clashing with camera zooming
+					if (Input.GetKey(KeyCode.RightBracket) && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
+					{
+						alt += editor.getIncrement();
+						changed = true;
+					}
+					if (Input.GetKey(KeyCode.LeftBracket) && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
+					{
+						alt -= editor.getIncrement();
+						changed = true;
+					}
 				}
 				
 				if (changed)
@@ -928,6 +952,11 @@ namespace KerbalKonstructs
 					{
 						if(cfg.HasValue(f.Name))
 							f.SetValue(this, Convert.ChangeType(cfg.GetValue(f.Name), f.FieldType));
+					}
+					else
+					{
+						Debug.Log("KK: Attribute not defined!");
+						continue;
 					}
 				}
 				return true;

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using LibNoise.Unity.Operator;
 using UnityEngine;
 using System.Linq;
+using System.IO;
 using Upgradeables;
 using UpgradeLevel = Upgradeables.UpgradeableObject.UpgradeLevel;
 
@@ -30,6 +31,8 @@ namespace KerbalKonstructs.UI
 		public Texture tRightOff = GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/rightoff", false);
 
 		Vector2 scrollPos;
+		Vector2 scrollPos2;
+		Vector2 scrollPos3;
 		private Boolean editingSite = false;
 		private float fOldRange = 0f;
 		Boolean creating = false;
@@ -41,7 +44,7 @@ namespace KerbalKonstructs.UI
 		Rect editorRect = new Rect(10, 25, 520, 520);
 		Rect siteEditorRect = new Rect(400, 50, 340, 480);
 		Rect managerRect = new Rect(10, 25, 400, 405);
-		Rect facilityRect = new Rect(150, 75, 350, 400);
+		Rect facilityRect = new Rect(150, 75, 400, 620);
 		Rect NGSRect = new Rect(250, 50, 350, 150);
 		Rect KSCmanagerRect = new Rect(150, 50, 400, 400);
 
@@ -146,6 +149,9 @@ namespace KerbalKonstructs.UI
 				return false;
 		}
 
+		public string sKISAFunds = "0";
+		public string sKISARep = "0";
+
 		void drawKSCmanagerWindow(int WindowID)
 		{
 			scrollPos = GUILayout.BeginScrollView(scrollPos);
@@ -154,6 +160,31 @@ namespace KerbalKonstructs.UI
 				GUILayout.Button(facility.name + " | Lvl: " + facility.FacilityLevel + "/" + facility.MaxLevel);
 			}
 			GUILayout.EndScrollView();
+			/* GUILayout.Box("Kerbin International Space Agency");
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("KISA Confidence: ");
+			GUI.enabled = false;
+			GUILayout.TextField("E");
+			GUI.enabled = true;
+			sKISARep = GUILayout.TextField(sKISARep);
+			GUILayout.Button("Boost with Rep");
+			GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("KISA Funding: ");
+			GUI.enabled = false;
+			GUILayout.TextField("0");
+			GUI.enabled = true;
+			GUILayout.Label("Monthly Costs: ");
+			GUI.enabled = false;
+			GUILayout.TextField("0");
+			GUI.enabled = true;
+			GUILayout.EndHorizontal();
+			GUILayout.BeginHorizontal();
+			GUILayout.Label("Funds: ");
+			sKISAFunds = GUILayout.TextField(sKISAFunds);
+			GUILayout.Button("Withdraw");
+			GUILayout.Button("Deposit");
+			GUILayout.EndHorizontal(); */
 			GUI.DragWindow(new Rect(0, 0, 10000, 10000));
 		}
 
@@ -324,6 +355,126 @@ namespace KerbalKonstructs.UI
 			prepNGS();
 		}
 
+		Boolean bLqFIn = false;
+		Boolean bLqFOut = false;
+		Boolean bOxFIn = false;
+		Boolean bOxFOut = false;
+		Boolean bMoFIn = false;
+		Boolean bMoFOut = false;
+		Boolean PartSelected = false;
+
+		Vessel CurrentVessel = null;
+		public PartResource SelectedResource = null;
+		public Part SelectedTank = null;
+
+		float fLqFMax = 0;
+		float fLqFCurrent = 0;
+		float fOxFMax = 0;
+		float fOxFCurrent = 0;
+		float fMoFMax = 0;
+		float fMoFCurrent = 0;
+
+		float fTransferRate = 0.01f;
+
+		void doFuelOut()
+		{
+			// if (CurrentVessel == null) return;
+			// if (CurrentVessel.isEVA) return;
+			if (SelectedResource == null) return;
+			if (SelectedTank == null) return;
+
+			// Debug.Log("KK: doFuelOut " + SelectedResource.resourceName);
+
+			if (SelectedResource.resourceName == "MonoPropellant" && !bMoFOut) return;
+			if (SelectedResource.resourceName == "LiquidFuel" && !bLqFOut) return;
+			if (SelectedResource.resourceName == "Oxidizer" && !bOxFOut) return;
+
+			if (SelectedResource.resourceName == "MonoPropellant" && fMoFCurrent <= 0) return;
+			if (SelectedResource.resourceName == "LiquidFuel" && fLqFCurrent <= 0) return;
+			if (SelectedResource.resourceName == "Oxidizer" && fOxFCurrent <= 0) return;
+
+			if (SelectedResource.amount >= SelectedResource.maxAmount) return;
+
+			float dStaticFuel;
+
+			// Debug.Log("KK: doFuelOut " + SelectedResource.resourceName);
+
+			SelectedResource.amount = SelectedResource.amount + fTransferRate;
+			if (SelectedResource.resourceName == "MonoPropellant")
+			{
+				dStaticFuel = ((float)selectedObject.getSetting("MoFCurrent")) - fTransferRate;
+				if (dStaticFuel < 0) dStaticFuel = 0;
+				selectedObject.setSetting("MoFCurrent", dStaticFuel);
+			}
+			if (SelectedResource.resourceName == "LiquidFuel")
+			{
+				dStaticFuel = ((float)selectedObject.getSetting("LqFCurrent")) - fTransferRate;
+				if (dStaticFuel < 0) dStaticFuel = 0;
+				selectedObject.setSetting("LqFCurrent", dStaticFuel);
+			}
+			if (SelectedResource.resourceName == "Oxidizer")
+			{
+				dStaticFuel = ((float)selectedObject.getSetting("OxFCurrent")) - fTransferRate;
+				if (dStaticFuel < 0) dStaticFuel = 0;
+				selectedObject.setSetting("OxFCurrent", dStaticFuel);
+			}
+		}
+
+		void doFuelIn()
+		{
+			// if (CurrentVessel == null) return;
+			// if (CurrentVessel.isEVA) return;
+			if (SelectedResource == null) return;
+			if (SelectedTank == null) return;
+
+			// Debug.Log("KK: doFuelIn " + SelectedResource.resourceName);
+
+			if (SelectedResource.resourceName == "MonoPropellant" && !bMoFIn) return;
+			if (SelectedResource.resourceName == "LiquidFuel" && !bLqFIn) return;
+			if (SelectedResource.resourceName == "Oxidizer" && !bOxFIn) return;
+
+			if (SelectedResource.resourceName == "MonoPropellant" && fMoFCurrent >= fMoFMax) return;
+			if (SelectedResource.resourceName == "LiquidFuel" && fLqFCurrent >= fLqFMax) return;
+			if (SelectedResource.resourceName == "Oxidizer" && fOxFCurrent >= fOxFMax) return;
+
+			if (SelectedResource.amount <= 0) return;
+
+			// Debug.Log("KK: doFuelIn " + SelectedResource.amount);
+
+			float dStaticFuel;
+
+			SelectedResource.amount = SelectedResource.amount - fTransferRate;
+			if (SelectedResource.amount < 0) SelectedResource.amount = 0;
+
+			if (SelectedResource.resourceName == "MonoPropellant")
+			{
+				dStaticFuel = ((float)selectedObject.getSetting("MoFCurrent")) + fTransferRate;
+				selectedObject.setSetting("MoFCurrent", dStaticFuel);
+			}
+			if (SelectedResource.resourceName == "LiquidFuel")
+			{
+				dStaticFuel = ((float)selectedObject.getSetting("LqFCurrent")) + fTransferRate;
+				selectedObject.setSetting("LqFCurrent", dStaticFuel);
+			}
+			if (SelectedResource.resourceName == "Oxidizer")
+			{
+				dStaticFuel = ((float)selectedObject.getSetting("OxFCurrent")) + fTransferRate;
+				selectedObject.setSetting("OxFCurrent", dStaticFuel);
+			}
+		}
+
+		void LockFuelTank()
+		{
+			SelectedResource = null;
+			SelectedTank = null;
+			bLqFIn = false;
+			bLqFOut = false;
+			bOxFIn = false;
+			bOxFOut = false;
+			bMoFIn = false;
+			bMoFOut = false;
+		}
+
 		void drawFacilityManagerWindow(int windowID)
 		{
 			string sFacilityName = (string)selectedObject.model.getSetting("title");
@@ -332,23 +483,299 @@ namespace KerbalKonstructs.UI
 			float fStaffMax = (float)selectedObject.model.getSetting("StaffMax");
 			float fStaffCurrent = (float)selectedObject.getSetting("StaffCurrent");
 
+			float fScienceOMax = (float)selectedObject.model.getSetting("ScienceOMax");
+			float fScienceOCurrent = (float)selectedObject.getSetting("ScienceOCurrent");
+
+			float fFundsOMax = (float)selectedObject.model.getSetting("FundsOMax");
+			float fFundsOCurrent = (float)selectedObject.getSetting("FundsOCurrent");
+
+			fLqFMax = (float)selectedObject.model.getSetting("LqFMax");
+			fLqFCurrent = (float)selectedObject.getSetting("LqFCurrent");
+			fOxFMax = (float)selectedObject.model.getSetting("OxFMax");
+			fOxFCurrent = (float)selectedObject.getSetting("OxFCurrent");
+			fMoFMax = (float)selectedObject.model.getSetting("MoFMax");
+			fMoFCurrent = (float)selectedObject.getSetting("MoFCurrent");
+
 			GUILayout.Box(sFacilityName);
+
+			if (!FlightGlobals.ActiveVessel.Landed)
+			{
+				GUILayout.Label("Vessel must be landed to use this facility!");
+				LockFuelTank();
+			}
+
+			var vDist = Vector3.Distance(selectedObject.gameObject.transform.position, FlightGlobals.ActiveVessel.transform.position);
+
+			if ((float)vDist < 100.0)
+			{}
+			else
+			{
+				GUILayout.Label("Vessel must be in range to use this facility!");
+				LockFuelTank();
+			}
+
+			if (fLqFMax > 0)
+			{
+				GUILayout.BeginHorizontal();
+					GUILayout.Label("Max LiquidFuel");
+					GUI.enabled = false;
+					GUILayout.TextField(string.Format("{0}", fLqFMax));
+					GUI.enabled = true;
+					//GUILayout.Space(20);
+					GUILayout.Label("Current LiquidFuel");
+					GUI.enabled = false;
+					GUILayout.TextField(fLqFCurrent.ToString("#0.00"));
+					GUI.enabled = true;
+				GUILayout.EndHorizontal();
+
+				GUILayout.BeginHorizontal();
+					GUILayout.Button("Order LiquidFuel");
+					GUI.enabled = !bLqFIn;
+					if (GUILayout.Button("Transfer In"))
+					{
+						bLqFIn = true;
+						bLqFOut = false;
+						saveStaticPersistence(selectedObject);
+					}
+					GUI.enabled = !bLqFOut;
+					if (GUILayout.Button("Transfer Out"))
+					{
+						bLqFOut = true;
+						bLqFIn = false;
+						saveStaticPersistence(selectedObject);
+					}
+					GUI.enabled = bLqFIn || bLqFOut;
+					if (GUILayout.Button("Stop"))
+					{
+						bLqFIn = false;
+						bLqFOut = false;
+						saveStaticPersistence(selectedObject);
+					}
+					GUI.enabled = true;
+				GUILayout.EndHorizontal();
+			}
+
+			if (fOxFMax > 0)
+			{
+				GUILayout.BeginHorizontal();
+					GUILayout.Label("Max Oxidizer");
+					GUI.enabled = false;
+					GUILayout.TextField(string.Format("{0}", fOxFMax));
+					GUI.enabled = true;
+					//GUILayout.Space(20);
+					GUILayout.Label("Current Oxidizer");
+					GUI.enabled = false;
+					GUILayout.TextField(fOxFCurrent.ToString("#0.00"));
+					GUI.enabled = true;
+				GUILayout.EndHorizontal();
+
+				GUILayout.BeginHorizontal();
+					GUILayout.Button("Order Oxidizer");
+					GUI.enabled = !bOxFIn;
+					if (GUILayout.Button("Transfer In"))
+					{
+						bOxFIn = true;
+						bOxFOut = false;
+						saveStaticPersistence(selectedObject);
+					}
+					GUI.enabled = !bOxFOut;
+					if (GUILayout.Button("Transfer Out"))
+					{
+						bOxFOut = true;
+						bOxFIn = false;
+						saveStaticPersistence(selectedObject);
+					}
+					GUI.enabled = bOxFIn || bOxFOut;
+					if (GUILayout.Button("Stop"))
+					{
+						bOxFIn = false;
+						bOxFOut = false;
+						saveStaticPersistence(selectedObject);
+					}
+					GUI.enabled = true;
+				GUILayout.EndHorizontal();
+			}
+
+			if (fMoFMax > 0)
+			{
+				GUILayout.BeginHorizontal();
+					GUILayout.Label("Max MonoProp.");
+					GUI.enabled = false;
+					GUILayout.TextField(string.Format("{0}", fMoFMax));
+					GUI.enabled = true;
+					//GUILayout.Space(20);
+					GUILayout.Label("Current MonoProp.");
+					GUI.enabled = false;
+					GUILayout.TextField(fMoFCurrent.ToString("#0.00"));
+					GUI.enabled = true;
+				GUILayout.EndHorizontal();
+
+				GUILayout.BeginHorizontal();
+					GUILayout.Button("Order MonoProp.");
+					GUI.enabled = !bMoFIn;
+					if (GUILayout.Button("Transfer In"))
+					{
+						bMoFIn = true;
+						bMoFOut = false;
+						saveStaticPersistence(selectedObject);
+					}
+					GUI.enabled = !bMoFOut;
+					if (GUILayout.Button("Transfer Out"))
+					{
+						bMoFOut = true;
+						bMoFIn = false;
+						saveStaticPersistence(selectedObject);
+					}
+					GUI.enabled = bMoFIn || bMoFOut;
+					if (GUILayout.Button("Stop"))
+					{
+						bMoFIn = false;
+						bMoFOut = false;
+						saveStaticPersistence(selectedObject);
+					}
+					GUI.enabled = true;
+				GUILayout.EndHorizontal();
+			}
+
+			if (fOxFMax > 0 || fLqFMax > 0 || fMoFMax > 0)
+			{
+				GUILayout.BeginHorizontal();
+					GUILayout.Label("Active Craft");
+					GUILayout.Box("" + FlightGlobals.ActiveVessel.vesselName);
+				GUILayout.EndHorizontal();
+
+				GUILayout.BeginHorizontal();
+					GUILayout.Label("Transfer Rate");
+
+					GUI.enabled = (fTransferRate != 0.01f);
+					if (GUILayout.Button("x1"))
+					{
+						fTransferRate = 0.01f;
+						saveStaticPersistence(selectedObject);
+					}
+					GUI.enabled = (fTransferRate != 0.04f);
+					if (GUILayout.Button("x4"))
+					{
+						fTransferRate = 0.04f;
+						saveStaticPersistence(selectedObject);
+					}
+					GUI.enabled = (fTransferRate != 0.1f);
+					if (GUILayout.Button("x10"))
+					{
+						fTransferRate = 0.1f;
+						saveStaticPersistence(selectedObject);
+					}
+					GUI.enabled = true;
+				GUILayout.EndHorizontal();
+
+				if (!FlightGlobals.ActiveVessel.isEVA && FlightGlobals.ActiveVessel.Landed)
+				{
+					GUILayout.Label("Vessel's Tanks");
+
+					scrollPos3 = GUILayout.BeginScrollView(scrollPos3);
+						foreach (Part fTank in FlightGlobals.ActiveVessel.parts)
+						{
+							foreach (PartResource rResource in fTank.Resources)
+							{
+								if (rResource.resourceName == "LiquidFuel" || rResource.resourceName == "Oxidizer" || rResource.resourceName == "MonoPropellant")
+								{
+									if (SelectedTank == fTank && SelectedResource == rResource)
+										PartSelected = true;
+									else
+										PartSelected = false;
+
+									GUILayout.BeginHorizontal();
+										GUILayout.Box("" + fTank.gameObject.name);
+										GUILayout.Box("" + rResource.resourceName);
+									GUILayout.EndHorizontal();
+								
+									GUILayout.BeginHorizontal();
+										GUILayout.Label("Fuel");
+										GUILayout.TextField("" + rResource.amount.ToString("#0.00"));
+
+										GUI.enabled = !PartSelected;
+										if (GUILayout.Button("Select"))
+										{
+											SelectedResource = rResource;
+											SelectedTank = fTank;
+											saveStaticPersistence(selectedObject);
+										}
+
+										GUI.enabled = PartSelected;
+										if (GUILayout.Button("Deselect"))
+										{
+											SelectedResource = null;
+											SelectedTank = null;
+											saveStaticPersistence(selectedObject);
+										}
+										GUI.enabled = true;
+									GUILayout.EndHorizontal();
+								}
+								else
+									continue;
+							}
+						}
+					GUILayout.EndScrollView();
+
+					GUI.enabled = true;
+
+					if (SelectedResource != null && SelectedTank != null)
+					{
+						// Debug.Log("KK: doFuelIn or doFuelOut");
+						if (bMoFOut || bOxFOut || bLqFOut)
+							doFuelOut();
+						if (bMoFIn || bOxFIn || bLqFIn)
+							doFuelIn();
+					}
+				}
+			}
+
+			if (fScienceOMax > 0)
+			{
+				GUILayout.BeginHorizontal();
+					GUILayout.Label("Max Science");
+					GUI.enabled = false;
+					GUILayout.TextField(string.Format("{0}", fScienceOMax));
+					GUI.enabled = true;
+					GUILayout.Space(20);
+					GUILayout.Label("Current Science");
+					GUI.enabled = false;
+					GUILayout.TextField(string.Format("{0}", fScienceOCurrent));
+					GUI.enabled = true;
+				GUILayout.EndHorizontal();
+
+				GUILayout.Button("Claim Science");
+			}
+
+			if (fFundsOMax > 0)
+			{
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Max Funds");
+				GUI.enabled = false;
+				GUILayout.TextField(string.Format("{0}", fFundsOMax));
+				GUI.enabled = true;
+				GUILayout.Space(20);
+				GUILayout.Label("Current Funds");
+				GUI.enabled = false;
+				GUILayout.TextField(string.Format("{0}", fFundsOCurrent));
+				GUI.enabled = true;
+				GUILayout.EndHorizontal();
+
+				GUILayout.Button("Claim Funds");
+			}
 
 			if (fStaffMax > 0)
 			{
 				GUILayout.BeginHorizontal();
-					GUILayout.Label("Max Billeted");
+					GUILayout.Label("Max Staff");
 					GUI.enabled = false;
-					GUILayout.TextField(string.Format("{0}", fStaffMax), GUILayout.Width(20));
+					GUILayout.TextField(string.Format("{0}", fStaffMax));
 					GUI.enabled = true;
 					GUILayout.Space(20);
-					GUILayout.Label("Current");
+					GUILayout.Label("Current Staff");
+					GUI.enabled = false;
+					GUILayout.TextField(string.Format("{0}", fStaffCurrent));
 					GUI.enabled = true;
-
-					for (int i = 1; i <= fStaffCurrent; i++)
-					{
-						GUILayout.Label(tBilleted, GUILayout.Height(32), GUILayout.Width(23));
-					}
 				GUILayout.EndHorizontal();
 
 				double dHiring = KerbalKonstructs.instance.staffHireCost;
@@ -358,7 +785,7 @@ namespace KerbalKonstructs.UI
 
 				GUILayout.BeginHorizontal();
 					GUI.enabled = (fStaffCurrent < fStaffMax);
-					if (GUILayout.Button("Hire 1", GUILayout.Width(120)))
+					if (GUILayout.Button("Hire 1"))
 					{
 						double dFunds = Funding.Instance.Funds;
 						double dRep = Reputation.Instance.reputation;
@@ -379,9 +806,8 @@ namespace KerbalKonstructs.UI
 							}
 					}
 					GUI.enabled = true;
-					GUILayout.FlexibleSpace();
 					GUI.enabled = (fStaffCurrent > 0);
-					if (GUILayout.Button("Fire 1", GUILayout.Width(120)))
+					if (GUILayout.Button("Fire 1"))
 					{
 						selectedObject.setSetting("StaffCurrent", fStaffCurrent - 1);
 					}
@@ -390,16 +816,150 @@ namespace KerbalKonstructs.UI
 			}
 
 			GUILayout.Space(10);
-			if (GUILayout.Button("Save and Close"))
+
+			if (GUILayout.Button("Close"))
 			{
+				SelectedResource = null;
+				SelectedTank = null;
 				managingFacility = false;
-				KerbalKonstructs.instance.saveObjects();
+				Debug.Log("KK: saveStaticPersistence");
+				saveStaticPersistence(selectedObject);
+				KerbalKonstructs.instance.deselectObject();
 			}
-			if (GUILayout.Button("Cancel"))
-			{
-				managingFacility = false;
-			}
+
 			GUI.DragWindow(new Rect(0, 0, 10000, 10000));
+		}
+
+		void saveStaticPersistence(StaticObject obj)
+		{
+			Boolean bFoundStatic = false;
+
+			Debug.Log("KK: saveStaticPersistence");
+			var FacilityKey = obj.getSetting("RadialPosition");
+			Debug.Log("KK: FacilityKey is " + FacilityKey.ToString());
+
+			string saveConfigPath = string.Format("{0}saves/{1}/KKFacilities.cfg", KSPUtil.ApplicationRootPath, HighLogic.SaveFolder);
+
+			ConfigNode rootNode = new ConfigNode();
+
+			if (!File.Exists(saveConfigPath))
+			{
+				ConfigNode GameNode = rootNode.AddNode("GAME");
+				ConfigNode ScenarioNode = GameNode.AddNode("SCENARIO");
+				ScenarioNode.AddValue("Name", "KKStatics");
+				rootNode.Save(saveConfigPath);
+			}
+
+			rootNode = ConfigNode.Load(saveConfigPath);
+			
+			ConfigNode rootrootNode = rootNode.GetNode("GAME");
+			ConfigNode cnHolder = new ConfigNode();
+
+			foreach (ConfigNode ins in rootrootNode.GetNodes("SCENARIO"))
+			{
+				cnHolder = ins;
+				foreach (ConfigNode insins in ins.GetNodes("KKStatic"))
+				{
+					Debug.Log("KK: Found a KKStatic");
+					string sRadPos = insins.GetValue("RadialPosition");
+					if (sRadPos == null)
+					{
+						Debug.Log("KK: Got a KKStatic but it has no key! WTF?????");
+						continue;
+					}
+					if (sRadPos == FacilityKey.ToString())
+					{
+						Debug.Log("KK: Got a KKStatic key match - editing the node");
+
+						if (insins.HasValue("LqFCurrent"))
+							insins.RemoveValue("LqFCurrent");
+						if (insins.HasValue("OxFCurrent"))
+							insins.RemoveValue("OxFCurrent");
+						if (insins.HasValue("MoFCurrent"))
+							insins.RemoveValue("MoFCurrent");
+
+						insins.AddValue("LqFCurrent", obj.getSetting("LqFCurrent").ToString());
+						insins.AddValue("OxFCurrent", obj.getSetting("OxFCurrent").ToString());
+						insins.AddValue("MoFCurrent", obj.getSetting("MoFCurrent").ToString());
+						bFoundStatic = true;
+						break;
+					}
+				}
+			}
+
+			if (!bFoundStatic)
+			{
+				Debug.Log("KK: No KKStatic found. Creating a new node.");
+
+				ConfigNode newStatic = new ConfigNode("KKStatic");
+				newStatic.AddValue("RadialPosition", obj.getSetting("RadialPosition"));
+				newStatic.AddValue("LqFCurrent", obj.getSetting("LqFCurrent"));
+				newStatic.AddValue("OxFCurrent", obj.getSetting("OxFCurrent"));
+				newStatic.AddValue("MoFCurrent", obj.getSetting("MoFCurrent"));
+				cnHolder.AddNode(newStatic);
+			}
+
+			Debug.Log("KK: rootNode.save");
+			rootNode.Save(saveConfigPath);
+		}
+
+		void loadStaticPersistence(StaticObject obj)
+		{
+			Debug.Log("KK: loadStaticPersistence");
+			var FacilityKey = obj.getSetting("RadialPosition");
+			Debug.Log("KK: FacilityKey is " + FacilityKey.ToString());
+			
+			string saveConfigPath = string.Format("{0}saves/{1}/KKFacilities.cfg", KSPUtil.ApplicationRootPath, HighLogic.SaveFolder);
+
+			ConfigNode rootNode = new ConfigNode();
+
+			if (!File.Exists(saveConfigPath))
+			{
+				ConfigNode GameNode = rootNode.AddNode("GAME");
+				ConfigNode ScenarioNode = GameNode.AddNode("SCENARIO");
+				ScenarioNode.AddValue("Name", "KKStatics");
+				rootNode.Save(saveConfigPath);
+			}
+
+			rootNode = ConfigNode.Load(saveConfigPath);			
+			ConfigNode rootrootNode = rootNode.GetNode("GAME");
+
+			Boolean bMatch = false;
+
+			foreach (ConfigNode ins in rootrootNode.GetNodes("SCENARIO"))
+			{
+				if (ins.GetValue("Name") == "KKStatics")
+				{
+					Debug.Log("KK: Found SCENARIO named KKStatics");
+
+					foreach (ConfigNode insins in ins.GetNodes("KKStatic"))
+					{
+						Debug.Log("KK: Found a KKStatic");
+						string sRadPos = insins.GetValue("RadialPosition");
+						if (sRadPos == FacilityKey.ToString())
+						{
+							Debug.Log("KK: Got a KKStatic key match");
+							obj.setSetting("LqFCurrent", float.Parse(insins.GetValue("LqFCurrent")));
+							obj.setSetting("OxFCurrent", float.Parse(insins.GetValue("OxFCurrent")));
+							obj.setSetting("MoFCurrent", float.Parse(insins.GetValue("MoFCurrent")));
+							bMatch = true;
+							break;
+						}
+						else
+							Debug.Log("KK: No KKStatic key match");
+					}
+					break;
+				}
+			}
+
+			if (!bMatch)
+			{
+				Debug.Log("KK: KKStatic not yet persistent for this save. Initialising KKStatic");
+				obj.setSetting("LqFCurrent", 0.00f);
+				obj.setSetting("OxFCurrent", 0.00f);
+				obj.setSetting("MoFCurrent", 0.00f);
+				saveStaticPersistence(obj);
+			}
 		}
 
 		void drawBaseManagerWindow(int windowID)
@@ -521,6 +1081,7 @@ namespace KerbalKonstructs.UI
 							if (GUILayout.Button((string)obj.model.getSetting("title")))
 							{
 								KerbalKonstructs.instance.selectObject(obj, false);
+								loadStaticPersistence(obj);
 								managingFacility = true;
 							}
 						}
