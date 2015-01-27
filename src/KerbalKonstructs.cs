@@ -67,6 +67,14 @@ namespace KerbalKonstructs
 		public Double staffHireCost = 1000;
 		[KSPField]
 		public Double staffRepRequirementMultiplier = 50;
+		[KSPField]
+		public Double facilityUseRange = 100;
+		/* [KSPField]
+		public Double ResourceCostLqF = 0.4;
+		[KSPField]
+		public Double ResourceCostOxF = 0.9;
+		[KSPField]
+		public Double ResourceCostMoF = 0.6; */
 
 		void Awake()
 		{
@@ -96,10 +104,9 @@ namespace KerbalKonstructs
 			KKAPI.addModelSetting("category", new ConfigGenericString());
 			KKAPI.addModelSetting("cost", new ConfigFloat());
 			KKAPI.addModelSetting("mass", new ConfigFloat());
-			KKAPI.addModelSetting("crashTolerance", new ConfigFloat());
 			KKAPI.addModelSetting("manufacturer", new ConfigGenericString());
 			KKAPI.addModelSetting("description", new ConfigGenericString());
-			KKAPI.addModelSetting("thumbnail", new ConfigGenericString());
+			KKAPI.addModelSetting("thumb", new ConfigGenericString());
 
 			// START Instance API ******			
 				// Position
@@ -131,7 +138,7 @@ namespace KerbalKonstructs
 				category.setDefaultValue("Other");
 				KKAPI.addInstanceSetting("Category", category);
 
-				// Career Mode Strategy
+				// Career Mode Strategy Instances
 				ConfigFloat openCost = new ConfigFloat();
 				openCost.setDefaultValue(0f);
 				KKAPI.addInstanceSetting("OpenCost", openCost);
@@ -141,13 +148,14 @@ namespace KerbalKonstructs
 				ConfigGenericString opencloseState = new ConfigGenericString();
 				opencloseState.setDefaultValue("Closed");
 				KKAPI.addInstanceSetting("OpenCloseState", opencloseState);
-				
-				// Facility Unique ID and Role
-				// Use RadialPosition
-				// KKAPI.addInstanceSetting("FacilityUID", new ConfigGenericString());
+
+				// Career Mode Strategy Models
 				ConfigGenericString facilityrole = new ConfigGenericString();
 				facilityrole.setDefaultValue("None");
 				KKAPI.addModelSetting("FacilityRole", facilityrole);
+				ConfigGenericString LocalToSave = new ConfigGenericString();
+				LocalToSave.setDefaultValue("False");
+				KKAPI.addModelSetting("LocalToSave", LocalToSave);
 
 				// Facility Ratings
 				KKAPI.addModelSetting("StaffMax", new ConfigFloat());
@@ -275,26 +283,6 @@ namespace KerbalKonstructs
 		public void SaveState(ConfigNode configNode)
 		{
 			Debug.Log("KK: SaveState");
-
-			/* //ConfigNode cnHolder = new ConfigNode();
-			Boolean bFoundKKStaticsNode = false;
-			foreach (ConfigNode ins in configNode.GetNodes("SCENARIO"))
-			{
-				if (ins.GetValue("Name") == "KKStatics")
-				{
-					//cnHolder = ins;
-					bFoundKKStaticsNode = true;
-				}
-			}
-
-			if (!bFoundKKStaticsNode)
-			{
-				Debug.Log("KK: No SCENARIO named KKStatics found. Making one.");
-				ConfigNode KKStaticsNode = new ConfigNode("SCENARIO");
-				KKStaticsNode.AddValue("Name", "KKStatics");
-				configNode.AddNode(KKStaticsNode);
-				//cnHolder = KKStaticsNode;
-			} */
 		}
 
 		void onLevelWasLoaded(GameScenes data)
@@ -427,6 +415,99 @@ namespace KerbalKonstructs
 			}
 		}
 
+		string savedObjectPath = "";
+
+		public void loadInstances(ConfigNode confconfig, StaticModel model)
+		{
+			foreach (ConfigNode ins in confconfig.GetNodes("Instances"))
+			{
+				// Debug.Log("KK: Loading models");
+				StaticObject obj = new StaticObject();
+				obj.model = model;
+				obj.gameObject = GameDatabase.Instance.GetModel(model.path + "/" + model.getSetting("mesh"));
+
+				if (obj.gameObject == null)
+				{
+					Debug.Log("KK: Could not find " + model.getSetting("mesh") + ".mu! Did the mod forget to include it or did you actually install it?");
+					continue;
+				}
+				// Debug.Log("KK: mesh is " + (string)model.getSetting("mesh"));
+
+				obj.settings = KKAPI.loadConfig(ins, KKAPI.getInstanceSettings());
+
+				if (!obj.settings.ContainsKey("LaunchPadTransform") && obj.settings.ContainsKey("LaunchSiteName"))
+				{
+
+					if (model.settings.Keys.Contains("DefaultLaunchPadTransform"))
+					{
+						obj.settings.Add("LaunchPadTransform", model.getSetting("DefaultLaunchPadTransform"));
+					}
+					else
+					{
+						Debug.Log("KK: Launch site is missing a transform. Defaulting to " + obj.getSetting("LaunchSiteName") + "_spawn...");
+
+						if (obj.gameObject.transform.Find(obj.getSetting("LaunchSiteName") + "_spawn") != null)
+						{
+							obj.settings.Add("LaunchPadTransform", obj.getSetting("LaunchSiteName") + "_spawn");
+						}
+						else
+						{
+							Debug.Log("KK: FAILED: " + obj.getSetting("LaunchSiteName") + "_spawn does not exist! Attempting to use any transform with _spawn in the name.");
+							Transform lastResort = obj.gameObject.transform.Cast<Transform>().FirstOrDefault(trans => trans.name.EndsWith("_spawn"));
+
+							if (lastResort != null)
+							{
+								Debug.Log("KK: Using " + lastResort.name + " as launchpad transform");
+								obj.settings.Add("LaunchPadTransform", lastResort.name);
+							}
+							else
+							{
+								Debug.Log("KK: All attempts at finding a launchpad transform have failed (╯°□°）╯︵ ┻━┻ This static isn't configured for KK properly. Tell the modder.");
+							}
+						}
+					}
+				}
+
+				staticDB.addStatic(obj);
+				spawnObject(obj, false);
+				if (obj.settings.ContainsKey("LaunchSiteName"))
+				{
+					LaunchSiteManager.createLaunchSite(obj);
+				}
+			}
+		}
+
+		public void loadCareerObjects()
+		{
+			UrlDir.UrlConfig[] configs = GameDatabase.Instance.GetConfigs("STATIC");
+
+			foreach (UrlDir.UrlConfig conf in configs)
+			{
+				StaticModel model = new StaticModel();
+				model.path = Path.GetDirectoryName(Path.GetDirectoryName(conf.url));
+				model.config = conf.url;
+				model.configPath = conf.url.Substring(0, conf.url.LastIndexOf('/')) + ".cfg";
+				model.settings = KKAPI.loadConfig(conf.config, KKAPI.getModelSettings());
+
+				string sConfigName = (Path.GetFileName(conf.url)) + ".cfg";
+
+				savedObjectPath = string.Format("{0}saves/{1}/{2}", KSPUtil.ApplicationRootPath, HighLogic.SaveFolder, sConfigName);
+
+				if (!File.Exists(savedObjectPath))
+				{
+					Debug.Log("KK: No " + savedObjectPath);
+					continue;
+				}
+
+				Debug.Log("KK: Career has object instances in " + savedObjectPath);
+
+				ConfigNode CareerConfig = ConfigNode.Load(savedObjectPath);
+				ConfigNode CareerConfigRoot = CareerConfig.GetNode("STATIC");
+
+				loadInstances(CareerConfigRoot, model);
+			}
+		}
+
 		public void loadObjects()
 		{
 			UrlDir.UrlConfig[] configs = GameDatabase.Instance.GetConfigs("STATIC");
@@ -438,6 +519,15 @@ namespace KerbalKonstructs
 				model.config = conf.url;
 				model.configPath = conf.url.Substring(0, conf.url.LastIndexOf('/')) + ".cfg";
 				model.settings = KKAPI.loadConfig(conf.config, KKAPI.getModelSettings());
+
+				if (model.settings.ContainsKey("LocalToSave"))
+				{
+					if ((string)model.getSetting("LocalToSave") == "True")
+					{
+						Debug.Log("KK: Static Config is local to save. Skipping model and its instances.");
+						continue;
+					}
+				}
 
 				foreach (ConfigNode ins in conf.config.GetNodes("MODULE"))
 				{
@@ -462,62 +552,7 @@ namespace KerbalKonstructs
 					Debug.Log("KK: Adding module");
 				}
 
-				foreach (ConfigNode ins in conf.config.GetNodes("Instances"))
-				{
-					// Debug.Log("KK: Loading models");
-					StaticObject obj = new StaticObject();
-					obj.model = model;
-					obj.gameObject = GameDatabase.Instance.GetModel(model.path + "/" + model.getSetting("mesh"));
-
-					if (obj.gameObject == null)
-					{
-						Debug.Log("KK: Could not find " + model.getSetting("mesh") + ".mu! Did the mod forget to include it or did you actually install it?");
-						continue;
-					}
-					// Debug.Log("KK: mesh is " + (string)model.getSetting("mesh"));
-
-					obj.settings = KKAPI.loadConfig(ins, KKAPI.getInstanceSettings());
-
-					if (!obj.settings.ContainsKey("LaunchPadTransform") && obj.settings.ContainsKey("LaunchSiteName"))
-					{
-						
-						if (model.settings.Keys.Contains("DefaultLaunchPadTransform"))
-						{
-							obj.settings.Add("LaunchPadTransform", model.getSetting("DefaultLaunchPadTransform"));
-						}
-						else
-						{
-							Debug.Log("KK: Launch site is missing a transform. Defaulting to " + obj.getSetting("LaunchSiteName") + "_spawn...");
-							
-							if (obj.gameObject.transform.Find(obj.getSetting("LaunchSiteName") + "_spawn") != null)
-							{
-								obj.settings.Add("LaunchPadTransform", obj.getSetting("LaunchSiteName") + "_spawn");
-							}
-							else
-							{
-								Debug.Log("KK: FAILED: " + obj.getSetting("LaunchSiteName") + "_spawn does not exist! Attempting to use any transform with _spawn in the name.");
-								Transform lastResort = obj.gameObject.transform.Cast<Transform>().FirstOrDefault(trans => trans.name.EndsWith("_spawn"));
-								
-								if (lastResort != null)
-								{
-									Debug.Log("KK: Using " + lastResort.name + " as launchpad transform");
-									obj.settings.Add("LaunchPadTransform", lastResort.name);
-								}
-								else
-								{
-									Debug.Log("KK: All attempts at finding a launchpad transform have failed (╯°□°）╯︵ ┻━┻ This static isn't configured for KK properly. Tell the modder.");
-								}
-							}
-						}
-					}
-
-					staticDB.addStatic(obj);
-					spawnObject(obj, false);
-					if (obj.settings.ContainsKey("LaunchSiteName"))
-					{
-						LaunchSiteManager.createLaunchSite(obj);
-					}
-				}
+				loadInstances(conf.config, model);
 				
 				staticDB.registerModel(model);
 			}
@@ -698,6 +733,10 @@ namespace KerbalKonstructs
 							facility.SetLevel(0);
 						}
 					}
+
+					Debug.Log("KK: loadCareerObjects");
+					loadCareerObjects();
+
 					InitialisedFacilities = true;
 					Debug.Log("KK: InitialisedFacilities check complete");
 				}

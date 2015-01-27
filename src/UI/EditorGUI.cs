@@ -14,12 +14,10 @@ namespace KerbalKonstructs.UI
 {
 	class EditorGUI
 	{
-		StaticObject selectedObject;
-		private String xPos, yPos, zPos, altitude, rotation, customgroup = "";
-		private String visrange = "";
-		private String increment = "1";
-		public Boolean enableColliders = false;
+		public StaticObject selectedObject;
+		static LaunchSite lTargetSite = null;
 
+		// Texture definitions
 		public Texture tBilleted = GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/billeted", false);
 		public Texture tCopyPos = GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/copypos", false);
 		public Texture tPastePos = GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/pastepos", false);
@@ -29,17 +27,20 @@ namespace KerbalKonstructs.UI
 		public Texture tLeftOff = GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/leftoff", false);
 		public Texture tRightOn = GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/righton", false);
 		public Texture tRightOff = GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/rightoff", false);
+		public Texture tTextureLeft = GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/leftoff", false);
+		public Texture tTextureRight = GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/rightoff", false);
+		public Texture tTextureMiddle = GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/siteclosed", false);
 
-		Vector2 scrollPos;
-		Vector2 scrollPos2;
-		Vector2 scrollPos3;
-		private Boolean editingSite = false;
-		private float fOldRange = 0f;
-		Boolean creating = false;
-		Boolean showLocal = false;
-		Boolean managingFacility = false;
-		Boolean onNGS = false;
+		// Switches
+		public Boolean enableColliders = false;
+		public Boolean editingSite = false;
+		public Boolean foundingBase = false;
+		public Boolean creatingInstance = false;
+		public Boolean showLocal = false;
+		public Boolean managingFacility = false;
+		public Boolean onNGS = false;
 
+		// GUI Windows
 		Rect toolRect = new Rect(150, 25, 310, 440);
 		Rect editorRect = new Rect(10, 25, 520, 520);
 		Rect siteEditorRect = new Rect(400, 50, 340, 480);
@@ -48,22 +49,30 @@ namespace KerbalKonstructs.UI
 		Rect NGSRect = new Rect(250, 50, 350, 150);
 		Rect KSCmanagerRect = new Rect(150, 50, 400, 400);
 
-		private GUIStyle listStyle = new GUIStyle();
-		private GUIStyle navStyle = new GUIStyle();
-		static LaunchSite lTargetSite = null;
-
-		string siteName, siteTrans, siteDesc, siteAuthor;
-		float flOpenCost, flCloseValue;
-		SiteType siteType;
-		string siteCategory;
+		// GUI elements
+		Vector2 scrollPos;
+		Vector2 scrollPos2;
+		Vector2 scrollPos3;
 		Vector2 descScroll;
-
-		private GUIContent[] siteTypeOptions = {
+		GUIStyle listStyle = new GUIStyle();
+		GUIStyle navStyle = new GUIStyle();
+		SiteType siteType;
+		GUIContent[] siteTypeOptions = {
 										new GUIContent("VAB"),
 										new GUIContent("SPH"),
 										new GUIContent("ANY")
 									};
 		ComboBox siteTypeMenu;
+
+		// Holders
+		String xPos, yPos, zPos, altitude, rotation, customgroup = "";
+		String visrange = "";
+		String increment = "1";
+		String siteName, siteTrans, siteDesc, siteAuthor, siteCategory;
+		float flOpenCost, flCloseValue;		
+		float fOldRange = 0f;
+		// public string sKISAFunds = "0";
+		// public string sKISARep = "0";
 
 		public EditorGUI()
 		{
@@ -83,6 +92,19 @@ namespace KerbalKonstructs.UI
 			siteTypeMenu = new ComboBox(siteTypeOptions[0], siteTypeOptions, "button", "box", null, listStyle);
 		}
 
+		public Boolean isCareerGame()
+		{
+			if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
+			{
+				if (!KerbalKonstructs.instance.disableCareerStrategyLayer)
+					return true;
+				else
+					return false;
+			}
+			else
+				return false;
+		}
+
 		public void drawKSCManager()
 		{
 			KSCmanagerRect = GUI.Window(0xC00B1E2, KSCmanagerRect, drawKSCmanagerWindow, "Base Boss : KSC Manager");
@@ -98,14 +120,8 @@ namespace KerbalKonstructs.UI
 				if (managingFacility)
 					facilityRect = GUI.Window(0xB00B1E1, facilityRect, drawFacilityManagerWindow, "Base Boss : Facility Manager");
 			}
-
-			/* if (onNGS)
-			{
-				NGSRect = GUI.Window(0xB00B1E9, NGSRect, drawNGSWindow, "", navStyle);
-			} */
-
+			
 			managerRect = GUI.Window(0xB00B1E2, managerRect, drawBaseManagerWindow, "Base Boss");
-
 		}
 
 		public void drawNGS()
@@ -133,24 +149,6 @@ namespace KerbalKonstructs.UI
 
 			editorRect = GUI.Window(0xB00B1E5, editorRect, drawEditorWindow, "Kerbal Konstructs Statics Editor");
 		}
-
-		public Boolean isCareerGame()
-		{
-			if (HighLogic.CurrentGame.Mode == Game.Modes.CAREER)
-			{
-				if (!KerbalKonstructs.instance.disableCareerStrategyLayer)
-				{
-					return true;
-				}
-				else
-					return false;
-			}
-			else
-				return false;
-		}
-
-		public string sKISAFunds = "0";
-		public string sKISARep = "0";
 
 		void drawKSCmanagerWindow(int WindowID)
 		{
@@ -188,12 +186,11 @@ namespace KerbalKonstructs.UI
 			GUI.DragWindow(new Rect(0, 0, 10000, 10000));
 		}
 
+		// NGS Handling
 		public float fRangeToTarget = 0f;
 		public bool bClosing = false;
 		public int iCorrection = 3;
-		public Texture tTextureLeft = GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/leftoff", false);
-		public Texture tTextureRight = GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/rightoff", false);
-		public Texture tTextureMiddle = GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/siteclosed", false);
+
 		public string sTargetSiteName = "NO TARGET";
 
 		private float angle1, angle2;
@@ -311,6 +308,7 @@ namespace KerbalKonstructs.UI
 			}
 		}
 
+		// NGS
 		void drawNGSWindow(int windowID)
 		{
 			GUILayout.BeginHorizontal();
@@ -355,6 +353,7 @@ namespace KerbalKonstructs.UI
 			prepNGS();
 		}
 
+		// Working facilities handling
 		Boolean bLqFIn = false;
 		Boolean bLqFOut = false;
 		Boolean bOxFIn = false;
@@ -362,6 +361,10 @@ namespace KerbalKonstructs.UI
 		Boolean bMoFIn = false;
 		Boolean bMoFOut = false;
 		Boolean PartSelected = false;
+
+		Boolean bOrderedLqF = false;
+		Boolean bOrderedOxF = false;
+		Boolean bOrderedMoF = false;
 
 		Vessel CurrentVessel = null;
 		public PartResource SelectedResource = null;
@@ -376,10 +379,12 @@ namespace KerbalKonstructs.UI
 
 		float fTransferRate = 0.01f;
 
+		string fOxFAmount = "0.00";
+		string fLqFAmount = "0.00";
+		string fMoFAmount = "0.00";
+
 		void doFuelOut()
 		{
-			// if (CurrentVessel == null) return;
-			// if (CurrentVessel.isEVA) return;
 			if (SelectedResource == null) return;
 			if (SelectedTank == null) return;
 
@@ -400,6 +405,8 @@ namespace KerbalKonstructs.UI
 			// Debug.Log("KK: doFuelOut " + SelectedResource.resourceName);
 
 			SelectedResource.amount = SelectedResource.amount + fTransferRate;
+			if (SelectedResource.amount > SelectedResource.maxAmount) SelectedResource.amount = SelectedResource.maxAmount;
+
 			if (SelectedResource.resourceName == "MonoPropellant")
 			{
 				dStaticFuel = ((float)selectedObject.getSetting("MoFCurrent")) - fTransferRate;
@@ -422,8 +429,6 @@ namespace KerbalKonstructs.UI
 
 		void doFuelIn()
 		{
-			// if (CurrentVessel == null) return;
-			// if (CurrentVessel.isEVA) return;
 			if (SelectedResource == null) return;
 			if (SelectedTank == null) return;
 
@@ -449,16 +454,19 @@ namespace KerbalKonstructs.UI
 			if (SelectedResource.resourceName == "MonoPropellant")
 			{
 				dStaticFuel = ((float)selectedObject.getSetting("MoFCurrent")) + fTransferRate;
+				if (dStaticFuel > fMoFMax) dStaticFuel = fMoFMax;
 				selectedObject.setSetting("MoFCurrent", dStaticFuel);
 			}
 			if (SelectedResource.resourceName == "LiquidFuel")
 			{
 				dStaticFuel = ((float)selectedObject.getSetting("LqFCurrent")) + fTransferRate;
+				if (dStaticFuel > fLqFMax) dStaticFuel = fLqFMax;
 				selectedObject.setSetting("LqFCurrent", dStaticFuel);
 			}
 			if (SelectedResource.resourceName == "Oxidizer")
 			{
 				dStaticFuel = ((float)selectedObject.getSetting("OxFCurrent")) + fTransferRate;
+				if (dStaticFuel > fOxFMax) dStaticFuel = fOxFMax;
 				selectedObject.setSetting("OxFCurrent", dStaticFuel);
 			}
 		}
@@ -475,6 +483,7 @@ namespace KerbalKonstructs.UI
 			bMoFOut = false;
 		}
 
+		// BASE BOSS FACILITY MANAGER
 		void drawFacilityManagerWindow(int windowID)
 		{
 			string sFacilityName = (string)selectedObject.model.getSetting("title");
@@ -496,21 +505,23 @@ namespace KerbalKonstructs.UI
 			fMoFMax = (float)selectedObject.model.getSetting("MoFMax");
 			fMoFCurrent = (float)selectedObject.getSetting("MoFCurrent");
 
+			float fPurchaseRate = fTransferRate * 100f;
+
 			GUILayout.Box(sFacilityName);
 
 			if (!FlightGlobals.ActiveVessel.Landed)
 			{
-				GUILayout.Label("Vessel must be landed to use this facility!");
+				GUILayout.Box("VESSEL MUST BE LANDED TO USE THIS FACILITY!");
 				LockFuelTank();
 			}
 
 			var vDist = Vector3.Distance(selectedObject.gameObject.transform.position, FlightGlobals.ActiveVessel.transform.position);
 
-			if ((float)vDist < 100.0)
+			if ((double)vDist < KerbalKonstructs.instance.facilityUseRange)
 			{}
 			else
 			{
-				GUILayout.Label("Vessel must be in range to use this facility!");
+				GUILayout.Box("VESSEL MUST BE IN RANGE TO USE THIS FACILITY!");
 				LockFuelTank();
 			}
 
@@ -521,7 +532,6 @@ namespace KerbalKonstructs.UI
 					GUI.enabled = false;
 					GUILayout.TextField(string.Format("{0}", fLqFMax));
 					GUI.enabled = true;
-					//GUILayout.Space(20);
 					GUILayout.Label("Current LiquidFuel");
 					GUI.enabled = false;
 					GUILayout.TextField(fLqFCurrent.ToString("#0.00"));
@@ -529,7 +539,12 @@ namespace KerbalKonstructs.UI
 				GUILayout.EndHorizontal();
 
 				GUILayout.BeginHorizontal();
-					GUILayout.Button("Order LiquidFuel");
+					if (GUILayout.Button("Order LiquidFuel"))
+					{
+						LockFuelTank();
+						saveStaticPersistence(selectedObject);
+						bOrderedLqF = true;
+					}
 					GUI.enabled = !bLqFIn;
 					if (GUILayout.Button("Transfer In"))
 					{
@@ -555,6 +570,64 @@ namespace KerbalKonstructs.UI
 				GUILayout.EndHorizontal();
 			}
 
+			if (bOrderedLqF)
+			{
+				GUILayout.BeginHorizontal();
+					if (GUILayout.RepeatButton("-"))
+					{
+						fLqFAmount = (float.Parse(fLqFAmount)  -fPurchaseRate).ToString();
+						if ((float.Parse(fLqFAmount)) < 0f) fLqFAmount = "0.00";
+					}
+					GUILayout.TextField(fLqFAmount);
+					if (GUILayout.RepeatButton("+"))
+					{
+						fLqFAmount = (float.Parse(fLqFAmount) +fPurchaseRate).ToString();
+						if ((float.Parse(fLqFAmount)) > (fLqFMax - fLqFCurrent)) fLqFAmount = (fLqFMax - fLqFCurrent).ToString();
+					}
+
+					if (GUILayout.Button("Max"))
+					{
+						fLqFAmount = (fLqFMax - fLqFCurrent).ToString();
+						if ((float.Parse(fLqFAmount)) < 0f) fLqFAmount = "0.00";
+						saveStaticPersistence(selectedObject);
+					}
+
+					float flqFPrice = 0.5f;
+
+					float fLqFCost = (float.Parse(fLqFAmount)) * flqFPrice;
+					GUILayout.Label("Cost: " + fLqFCost + " \\F");
+					if (GUILayout.Button("Buy"))
+					{
+						if ((float)selectedObject.getSetting("LqFCurrent") + (float.Parse(fLqFAmount)) > fLqFMax)
+						{
+							ScreenMessages.PostScreenMessage("Insufficient fuel capacity!", 10, 0);
+							fLqFAmount = "0.00";
+						}
+						else
+						{
+							double currentfunds = Funding.Instance.Funds;
+
+							if (fLqFCost > currentfunds)
+							{
+								ScreenMessages.PostScreenMessage("Insufficient funds!", 10, 0);
+							}
+							else
+							{
+								Funding.Instance.AddFunds(-fLqFCost, TransactionReasons.Cheating);
+								selectedObject.setSetting("LqFCurrent", (float)selectedObject.getSetting("LqFCurrent") + (float.Parse(fLqFAmount)));
+							}
+						}
+
+						saveStaticPersistence(selectedObject);
+					}
+					if (GUILayout.Button("Done"))
+					{
+						saveStaticPersistence(selectedObject);
+						bOrderedLqF = false;
+					}
+				GUILayout.EndHorizontal();
+			}
+
 			if (fOxFMax > 0)
 			{
 				GUILayout.BeginHorizontal();
@@ -562,7 +635,6 @@ namespace KerbalKonstructs.UI
 					GUI.enabled = false;
 					GUILayout.TextField(string.Format("{0}", fOxFMax));
 					GUI.enabled = true;
-					//GUILayout.Space(20);
 					GUILayout.Label("Current Oxidizer");
 					GUI.enabled = false;
 					GUILayout.TextField(fOxFCurrent.ToString("#0.00"));
@@ -570,7 +642,12 @@ namespace KerbalKonstructs.UI
 				GUILayout.EndHorizontal();
 
 				GUILayout.BeginHorizontal();
-					GUILayout.Button("Order Oxidizer");
+					if (GUILayout.Button("Order Oxidizer"))
+					{
+						LockFuelTank();
+						saveStaticPersistence(selectedObject);
+						bOrderedOxF = true;
+					}
 					GUI.enabled = !bOxFIn;
 					if (GUILayout.Button("Transfer In"))
 					{
@@ -596,6 +673,64 @@ namespace KerbalKonstructs.UI
 				GUILayout.EndHorizontal();
 			}
 
+			if (bOrderedOxF)
+			{
+				GUILayout.BeginHorizontal();
+				if (GUILayout.RepeatButton("-"))
+				{
+					fOxFAmount = (float.Parse(fOxFAmount) -fPurchaseRate).ToString();
+					if ((float.Parse(fOxFAmount)) < 0f) fOxFAmount = "0.00";
+				}
+				GUILayout.TextField(fOxFAmount);
+				if (GUILayout.RepeatButton("+"))
+				{
+					fOxFAmount = (float.Parse(fOxFAmount) + fPurchaseRate).ToString();
+					if ((float.Parse(fOxFAmount)) > (fOxFMax - fOxFCurrent)) fOxFAmount = (fOxFMax - fOxFCurrent).ToString();
+				}
+
+				if (GUILayout.Button("Max"))
+				{
+					fOxFAmount = (fOxFMax - fOxFCurrent).ToString();
+					if ((float.Parse(fOxFAmount)) < 0f) fOxFAmount = "0.00";
+					saveStaticPersistence(selectedObject);
+				}
+
+				float fOxFPrice = 1.5f;
+
+				float fOxFCost = (float.Parse(fOxFAmount)) * fOxFPrice;
+				GUILayout.Label("Cost: " + fOxFCost + " \\F");
+				if (GUILayout.Button("Buy"))
+				{
+					if ((float)selectedObject.getSetting("OxFCurrent") + (float.Parse(fOxFAmount)) > fOxFMax)
+					{
+						ScreenMessages.PostScreenMessage("Insufficient fuel capacity!", 10, 0);
+						fOxFAmount = "0.00";
+					}
+					else
+					{
+						double currentfunds = Funding.Instance.Funds;
+
+						if (fOxFCost > currentfunds)
+						{
+							ScreenMessages.PostScreenMessage("Insufficient funds!", 10, 0);
+						}
+						else
+						{
+							Funding.Instance.AddFunds(-fOxFCost, TransactionReasons.Cheating);
+							selectedObject.setSetting("OxFCurrent", (float)selectedObject.getSetting("OxFCurrent") + (float.Parse(fOxFAmount)));
+						}
+					}
+
+					saveStaticPersistence(selectedObject);
+				}
+				if (GUILayout.Button("Done"))
+				{
+					saveStaticPersistence(selectedObject);
+					bOrderedOxF = false;
+				}
+				GUILayout.EndHorizontal();
+			}
+
 			if (fMoFMax > 0)
 			{
 				GUILayout.BeginHorizontal();
@@ -603,7 +738,6 @@ namespace KerbalKonstructs.UI
 					GUI.enabled = false;
 					GUILayout.TextField(string.Format("{0}", fMoFMax));
 					GUI.enabled = true;
-					//GUILayout.Space(20);
 					GUILayout.Label("Current MonoProp.");
 					GUI.enabled = false;
 					GUILayout.TextField(fMoFCurrent.ToString("#0.00"));
@@ -611,7 +745,12 @@ namespace KerbalKonstructs.UI
 				GUILayout.EndHorizontal();
 
 				GUILayout.BeginHorizontal();
-					GUILayout.Button("Order MonoProp.");
+					if (GUILayout.Button("Order MonoProp."))
+					{
+						LockFuelTank();
+						saveStaticPersistence(selectedObject);
+						bOrderedMoF = true;
+					}
 					GUI.enabled = !bMoFIn;
 					if (GUILayout.Button("Transfer In"))
 					{
@@ -637,11 +776,69 @@ namespace KerbalKonstructs.UI
 				GUILayout.EndHorizontal();
 			}
 
+			if (bOrderedMoF)
+			{
+				GUILayout.BeginHorizontal();
+				if (GUILayout.RepeatButton("-"))
+				{
+					fMoFAmount = (float.Parse(fMoFAmount) -fPurchaseRate).ToString();
+					if ((float.Parse(fMoFAmount)) < 0f) fMoFAmount = "0.00";
+				}
+				GUILayout.TextField(fMoFAmount);
+				if (GUILayout.RepeatButton("+"))
+				{
+					fMoFAmount = (float.Parse(fMoFAmount) +fPurchaseRate).ToString();
+					if ((float.Parse(fMoFAmount)) > (fMoFMax - fMoFCurrent)) fMoFAmount = (fMoFMax - fMoFCurrent).ToString();
+				}
+
+				if (GUILayout.Button("Max"))
+				{
+					fMoFAmount = (fMoFMax - fMoFCurrent).ToString();
+					if ((float.Parse(fMoFAmount)) < 0f) fMoFAmount = "0.00";
+					saveStaticPersistence(selectedObject);
+				}
+
+				float fMoFPrice = 1.2f;
+
+				float fMoFCost = (float.Parse(fMoFAmount)) * fMoFPrice;
+				GUILayout.Label("Cost: " + fMoFCost + " \\F");
+				if (GUILayout.Button("Buy"))
+				{
+					if ((float)selectedObject.getSetting("MoFCurrent") + (float.Parse(fMoFAmount)) > fMoFMax)
+					{
+						ScreenMessages.PostScreenMessage("Insufficient fuel capacity!", 10, 0);
+						fMoFAmount = "0.00";
+					}
+					else
+					{
+						double currentfunds = Funding.Instance.Funds;
+
+						if (fMoFCost > currentfunds)
+						{
+							ScreenMessages.PostScreenMessage("Insufficient funds!", 10, 0);
+						}
+						else
+						{
+							Funding.Instance.AddFunds(-fMoFCost, TransactionReasons.Cheating);
+							selectedObject.setSetting("MoFCurrent", (float)selectedObject.getSetting("MoFCurrent") + (float.Parse(fMoFAmount)));
+						}
+					}
+
+					saveStaticPersistence(selectedObject);
+				}
+				if (GUILayout.Button("Done"))
+				{
+					saveStaticPersistence(selectedObject);
+					bOrderedMoF = false;
+				}
+				GUILayout.EndHorizontal();
+			}
+
 			if (fOxFMax > 0 || fLqFMax > 0 || fMoFMax > 0)
 			{
 				GUILayout.BeginHorizontal();
-					GUILayout.Label("Active Craft");
-					GUILayout.Box("" + FlightGlobals.ActiveVessel.vesselName);
+					GUILayout.Label("Active Vessel");
+					GUILayout.Box("" + FlightGlobals.ActiveVessel.vesselName, GUILayout.Height(25));
 				GUILayout.EndHorizontal();
 
 				GUILayout.BeginHorizontal();
@@ -730,7 +927,7 @@ namespace KerbalKonstructs.UI
 				}
 			}
 
-			if (fScienceOMax > 0)
+			/* if (fScienceOMax > 0)
 			{
 				GUILayout.BeginHorizontal();
 					GUILayout.Label("Max Science");
@@ -813,14 +1010,13 @@ namespace KerbalKonstructs.UI
 					}
 					GUI.enabled = true;
 				GUILayout.EndHorizontal();
-			}
+			} */
 
 			GUILayout.Space(10);
 
 			if (GUILayout.Button("Close"))
 			{
-				SelectedResource = null;
-				SelectedTank = null;
+				LockFuelTank();
 				managingFacility = false;
 				Debug.Log("KK: saveStaticPersistence");
 				saveStaticPersistence(selectedObject);
@@ -834,9 +1030,9 @@ namespace KerbalKonstructs.UI
 		{
 			Boolean bFoundStatic = false;
 
-			Debug.Log("KK: saveStaticPersistence");
+			// Debug.Log("KK: saveStaticPersistence");
 			var FacilityKey = obj.getSetting("RadialPosition");
-			Debug.Log("KK: FacilityKey is " + FacilityKey.ToString());
+			// Debug.Log("KK: FacilityKey is " + FacilityKey.ToString());
 
 			string saveConfigPath = string.Format("{0}saves/{1}/KKFacilities.cfg", KSPUtil.ApplicationRootPath, HighLogic.SaveFolder);
 
@@ -860,16 +1056,16 @@ namespace KerbalKonstructs.UI
 				cnHolder = ins;
 				foreach (ConfigNode insins in ins.GetNodes("KKStatic"))
 				{
-					Debug.Log("KK: Found a KKStatic");
+					// Debug.Log("KK: Found a KKStatic");
 					string sRadPos = insins.GetValue("RadialPosition");
 					if (sRadPos == null)
 					{
-						Debug.Log("KK: Got a KKStatic but it has no key! WTF?????");
+						// Debug.Log("KK: Got a KKStatic but it has no key! WTF?????");
 						continue;
 					}
 					if (sRadPos == FacilityKey.ToString())
 					{
-						Debug.Log("KK: Got a KKStatic key match - editing the node");
+						// Debug.Log("KK: Got a KKStatic key match - editing the node");
 
 						if (insins.HasValue("LqFCurrent"))
 							insins.RemoveValue("LqFCurrent");
@@ -889,7 +1085,7 @@ namespace KerbalKonstructs.UI
 
 			if (!bFoundStatic)
 			{
-				Debug.Log("KK: No KKStatic found. Creating a new node.");
+				// Debug.Log("KK: No KKStatic found. Creating a new node.");
 
 				ConfigNode newStatic = new ConfigNode("KKStatic");
 				newStatic.AddValue("RadialPosition", obj.getSetting("RadialPosition"));
@@ -905,9 +1101,9 @@ namespace KerbalKonstructs.UI
 
 		void loadStaticPersistence(StaticObject obj)
 		{
-			Debug.Log("KK: loadStaticPersistence");
+			// Debug.Log("KK: loadStaticPersistence");
 			var FacilityKey = obj.getSetting("RadialPosition");
-			Debug.Log("KK: FacilityKey is " + FacilityKey.ToString());
+			// Debug.Log("KK: FacilityKey is " + FacilityKey.ToString());
 			
 			string saveConfigPath = string.Format("{0}saves/{1}/KKFacilities.cfg", KSPUtil.ApplicationRootPath, HighLogic.SaveFolder);
 
@@ -930,23 +1126,23 @@ namespace KerbalKonstructs.UI
 			{
 				if (ins.GetValue("Name") == "KKStatics")
 				{
-					Debug.Log("KK: Found SCENARIO named KKStatics");
+					// Debug.Log("KK: Found SCENARIO named KKStatics");
 
 					foreach (ConfigNode insins in ins.GetNodes("KKStatic"))
 					{
-						Debug.Log("KK: Found a KKStatic");
+						// Debug.Log("KK: Found a KKStatic");
 						string sRadPos = insins.GetValue("RadialPosition");
 						if (sRadPos == FacilityKey.ToString())
 						{
-							Debug.Log("KK: Got a KKStatic key match");
+							// Debug.Log("KK: Got a KKStatic key match");
 							obj.setSetting("LqFCurrent", float.Parse(insins.GetValue("LqFCurrent")));
 							obj.setSetting("OxFCurrent", float.Parse(insins.GetValue("OxFCurrent")));
 							obj.setSetting("MoFCurrent", float.Parse(insins.GetValue("MoFCurrent")));
 							bMatch = true;
 							break;
 						}
-						else
-							Debug.Log("KK: No KKStatic key match");
+						// else
+							// Debug.Log("KK: No KKStatic key match");
 					}
 					break;
 				}
@@ -954,7 +1150,7 @@ namespace KerbalKonstructs.UI
 
 			if (!bMatch)
 			{
-				Debug.Log("KK: KKStatic not yet persistent for this save. Initialising KKStatic");
+				// Debug.Log("KK: KKStatic not yet persistent for this save. Initialising KKStatic");
 				obj.setSetting("LqFCurrent", 0.00f);
 				obj.setSetting("OxFCurrent", 0.00f);
 				obj.setSetting("MoFCurrent", 0.00f);
@@ -962,6 +1158,7 @@ namespace KerbalKonstructs.UI
 			}
 		}
 
+		// BASE BOSS
 		void drawBaseManagerWindow(int windowID)
 		{
 			string Base;
@@ -1022,11 +1219,12 @@ namespace KerbalKonstructs.UI
 
 				if (isCareerGame())
 				{
+					bool bLanded = (FlightGlobals.ActiveVessel.Landed);
+
 					if (Range < 2000)
 					{
 						string sClosed;
 						float fOpenCost;
-						bool bLanded = (FlightGlobals.ActiveVessel.Landed);
 						LaunchSiteManager.getSiteOpenCloseState(Base, out sClosed, out fOpenCost);
 						fOpenCost = fOpenCost / 2f;
 
@@ -1059,6 +1257,17 @@ namespace KerbalKonstructs.UI
 						}
 
 						GUILayout.Space(2);
+					}
+
+					if (Range > 100000)
+					{
+						if (bLanded)
+						{
+							if (GUILayout.Button("Found a New Base"))
+							{
+								foundingBase = true;
+							}
+						}
 					}
 				}
 										
@@ -1094,6 +1303,7 @@ namespace KerbalKonstructs.UI
 			GUI.DragWindow(new Rect(0, 0, 10000, 10000));
 		}
 
+		// Instance Editor handlers
 		string savedxpos = "";
 		string savedypos = "";
 		string savedzpos = "";
@@ -1102,6 +1312,7 @@ namespace KerbalKonstructs.UI
 		bool savedpos = false;
 		bool pospasted = false;
 
+		// INSTANCE EDITOR
 		void drawToolWindow(int windowID)
 		{
 			Vector3 position = Vector3.zero;
@@ -1127,7 +1338,7 @@ namespace KerbalKonstructs.UI
 						savedzpos = zPos;
 						savedalt = altitude;
 						savedrot = rotation;
-						Debug.Log("KK: Instance position copied");
+						// Debug.Log("KK: Instance position copied");
 					}
 					if (GUILayout.Button(tPastePos, GUILayout.Width(23), GUILayout.Height(23)))
 					{
@@ -1139,7 +1350,7 @@ namespace KerbalKonstructs.UI
 							zPos = savedzpos;
 							altitude = savedalt;
 							rotation = savedrot;
-							Debug.Log("KK: Instance position pasted");
+							// Debug.Log("KK: Instance position pasted");
 						}
 					}
 					GUILayout.FlexibleSpace();
@@ -1340,7 +1551,7 @@ namespace KerbalKonstructs.UI
 					stOpenCost = string.Format("{0}", flOpenCost);
 					stCloseValue = string.Format("{0}", flCloseValue);
 					siteAuthor = (selectedObject.settings.ContainsKey("author")) ? (string)selectedObject.getSetting("author") : (string)selectedObject.model.getSetting("author");
-					Debug.Log("KK: Making or editing a launchsite");
+					// Debug.Log("KK: Making or editing a launchsite");
 					editingSite = true;
 				}
 					
@@ -1473,29 +1684,30 @@ namespace KerbalKonstructs.UI
 			return obj;
 		}
 
+		// STATICS EDITOR
 		void drawEditorWindow(int id)
 		{
 			GUILayout.BeginArea(new Rect(10, 25, 500, 485));
 			GUILayout.BeginHorizontal();
-				GUI.enabled = !creating;
+				GUI.enabled = !creatingInstance;
 				if (GUILayout.Button("Spawn New", GUILayout.Width(115)))
 				{
-					creating = true;
+					creatingInstance = true;
 					showLocal = false;
 				}
 				GUILayout.Space(10);
-				GUI.enabled = creating || showLocal;
+				GUI.enabled = creatingInstance || showLocal;
 				if (GUILayout.Button("All Instances", GUILayout.Width(108)))
 				{
-					creating = false;
+					creatingInstance = false;
 					showLocal = false;
 				}
 				GUI.enabled = true;
 				GUILayout.Space(2);
-				GUI.enabled = creating || !showLocal;
+				GUI.enabled = creatingInstance || !showLocal;
 				if (GUILayout.Button("Local Instances", GUILayout.Width(108)))
 				{
-					creating = false;
+					creatingInstance = false;
 					showLocal = true;
 				}
 				GUI.enabled = true;
@@ -1505,7 +1717,7 @@ namespace KerbalKonstructs.UI
 			GUILayout.EndHorizontal();
 
 			scrollPos = GUILayout.BeginScrollView(scrollPos);
-				if (creating)
+				if (creatingInstance)
 				{
 					foreach (StaticModel model in KerbalKonstructs.instance.getStaticDB().getModels())
 					{
@@ -1516,7 +1728,7 @@ namespace KerbalKonstructs.UI
 					}
 				}
 
-				if (!creating)
+				if (!creatingInstance)
 				{
 					foreach (StaticObject obj in KerbalKonstructs.instance.getStaticDB().getAllStatics())
 					{
@@ -1587,9 +1799,11 @@ namespace KerbalKonstructs.UI
 			}
 		}
 
+		// Launchsite Editor handlers
 		string stOpenCost;
 		string stCloseValue;
 
+		// LAUNCHSITE EDITOR
 		void drawSiteEditorWindow(int id)
 		{
 			GUILayout.Box((string)selectedObject.model.getSetting("title"));
