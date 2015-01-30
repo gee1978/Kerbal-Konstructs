@@ -26,12 +26,6 @@ namespace KerbalKonstructs.UI
 			mapManagerRect = GUI.Window(0xB00B2E7, mapManagerRect, drawMapManagerWindow, "Base Boss : Map Manager");
 		}
 
-		bool showOpen = true;
-		bool showClosed = true;
-		bool showRocketPads = true;
-		bool showHelipads = true;
-		bool showRunways = true;
-		bool showOther = true;
 		bool loadedPersistence = false;
 
 		public Boolean isCareerGame()
@@ -66,20 +60,20 @@ namespace KerbalKonstructs.UI
 			GUI.enabled = (isCareerGame());
 			if (!isCareerGame())
 			{
-				showOpen = GUILayout.Toggle(true, "Show open bases");
-				showClosed = GUILayout.Toggle(true, "Show closed bases");
+				KerbalKonstructs.instance.mapShowOpen = GUILayout.Toggle(true, "Show open bases");
+				KerbalKonstructs.instance.mapShowClosed = GUILayout.Toggle(true, "Show closed bases");
 			}
 			else
 			{
-				showOpen = GUILayout.Toggle(showOpen, "Show open bases");
-				showClosed = GUILayout.Toggle(showClosed, "Show closed bases");
+				KerbalKonstructs.instance.mapShowOpen = GUILayout.Toggle(KerbalKonstructs.instance.mapShowOpen, "Show open bases");
+				KerbalKonstructs.instance.mapShowClosed = GUILayout.Toggle(KerbalKonstructs.instance.mapShowClosed, "Show closed bases");
 			}
 			GUI.enabled = true;
 			GUILayout.Space(5);
-			showRocketPads = GUILayout.Toggle(showRocketPads, "Show rocketpads");
-			showHelipads = GUILayout.Toggle(showHelipads, "Show helipads");
-			showRunways = GUILayout.Toggle(showRunways, "Show runways");
-			showOther = GUILayout.Toggle(showOther, "Show other launchsites");
+			KerbalKonstructs.instance.mapShowRocketbases = GUILayout.Toggle(KerbalKonstructs.instance.mapShowRocketbases, "Show rocketpads");
+			KerbalKonstructs.instance.mapShowHelipads = GUILayout.Toggle(KerbalKonstructs.instance.mapShowHelipads, "Show helipads");
+			KerbalKonstructs.instance.mapShowRunways = GUILayout.Toggle(KerbalKonstructs.instance.mapShowRunways, "Show runways");
+			KerbalKonstructs.instance.mapShowOther = GUILayout.Toggle(KerbalKonstructs.instance.mapShowOther, "Show other launchsites");
 			GUILayout.Space(3);
 
 			if (selectedSite != null)
@@ -189,20 +183,20 @@ namespace KerbalKonstructs.UI
 									string openclosed = site.openclosestate;
 									string category = site.category;
 
-									if (showHelipads && category == "Helipad")
+									if (KerbalKonstructs.instance.mapShowHelipads && category == "Helipad")
 										display = true;
-									if (showOther && category == "Other")
+									if (KerbalKonstructs.instance.mapShowOther && category == "Other")
 										display = true;
-									if (showRocketPads && category == "RocketPad")
+									if (KerbalKonstructs.instance.mapShowRocketbases && category == "RocketPad")
 										display = true;
-									if (showRunways && category == "Runway")
+									if (KerbalKonstructs.instance.mapShowRunways && category == "Runway")
 										display = true;
 
 									if (display && isCareerGame())
 									{
-										if (!showOpen && openclosed == "Open")
+										if (!KerbalKonstructs.instance.mapShowOpen && openclosed == "Open")
 											display = false;
-										if (!showClosed && openclosed == "Closed")
+										if (!KerbalKonstructs.instance.mapShowClosed && openclosed == "Closed")
 											display = false;
 									}
 

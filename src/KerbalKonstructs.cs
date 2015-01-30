@@ -40,6 +40,7 @@ namespace KerbalKonstructs
 
 		private Dictionary<UpgradeableFacility, int> facilityLevels = new Dictionary<UpgradeableFacility,int>();
 
+		#region Show Switches
 		// Show toggles
 		private Boolean showEditor = false;
 		private Boolean showSelector = false;
@@ -47,6 +48,7 @@ namespace KerbalKonstructs
 		private Boolean showMapManager = false;
 		private Boolean showKSCmanager = false;
 		public Boolean showNGS = false;
+		#endregion
 
 		// App Buttons
 		private ApplicationLauncherButton siteSelector;
@@ -54,6 +56,7 @@ namespace KerbalKonstructs
 		private ApplicationLauncherButton mapManager;
 		private ApplicationLauncherButton KSCmanager;
 
+		#region Configurable Variables
 		// Configurable variables
 		[KSPField]
 		public Boolean launchFromAnySite = false;
@@ -64,23 +67,37 @@ namespace KerbalKonstructs
 		[KSPField]
 		public Boolean enableNGS = true;
 		[KSPField]
+		public Double facilityUseRange = 100;
+		[KSPField]
+		public Boolean mapShowOpen = true;
+		[KSPField]
+		public Boolean mapShowClosed = false;
+		[KSPField]
+		public Boolean mapShowHelipads = true;
+		[KSPField]
+		public Boolean mapShowRunways = true;
+		[KSPField]
+		public Boolean mapShowRocketbases = true;
+		[KSPField]
+		public Boolean mapShowOther = false;
+		/* [KSPField]
 		public Double staffHireCost = 1000;
 		[KSPField]
-		public Double staffRepRequirementMultiplier = 50;
-		[KSPField]
-		public Double facilityUseRange = 100;
+		public Double staffRepRequirementMultiplier = 50; */	
 		/* [KSPField]
 		public Double ResourceCostLqF = 0.4;
 		[KSPField]
 		public Double ResourceCostOxF = 0.9;
 		[KSPField]
 		public Double ResourceCostMoF = 0.6; */
+		#endregion
 
 		void Awake()
 		{
 			instance = this;
 			Debug.Log("KK: Awake");
 
+			#region Game Event Additions
 			// Game Event Additions
 			GameEvents.onDominantBodyChange.Add(onDominantBodyChange);
 			GameEvents.onLevelWasLoaded.Add(onLevelWasLoaded);
@@ -93,7 +110,9 @@ namespace KerbalKonstructs
 			GameEvents.OnKSCFacilityUpgraded.Add(OnKSCFacilityUpgraded);
 			GameEvents.OnKSCFacilityUpgrading.Add(OnKSCFacilityUpgrading);
 			GameEvents.OnUpgradeableObjLevelChange.Add(OnUpgradeableObjLevelChange);
+			#endregion
 
+			#region Model API
 			// Model API
 			KKAPI.addModelSetting("mesh", new ConfigFile());
 			ConfigGenericString authorConfig = new ConfigGenericString();
@@ -107,6 +126,7 @@ namespace KerbalKonstructs
 			KKAPI.addModelSetting("manufacturer", new ConfigGenericString());
 			KKAPI.addModelSetting("description", new ConfigGenericString());
 			KKAPI.addModelSetting("thumb", new ConfigGenericString());
+			#endregion
 
 			// START Instance API ******			
 				// Position
