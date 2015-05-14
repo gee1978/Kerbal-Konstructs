@@ -27,7 +27,7 @@ namespace KerbalKonstructs.SpaceCenters
 			CustomSpaceCenter closest = null;
 
 			float smallestDist = Vector3.Distance(KSC.gameObject.transform.position, position);
-			Debug.Log("KK: Distance to KSC is " + smallestDist);
+			// Debug.Log("KK: Distance to KSC is " + smallestDist);
 
 			bool isCareer = false;
 
@@ -63,7 +63,7 @@ namespace KerbalKonstructs.SpaceCenters
 					{
 						closest = csc;
 						smallestDist = dist;
-						Debug.Log("KK: closest updated to " + closest.SpaceCenterName + ", distance " + smallestDist);
+						// Debug.Log("KK: closest updated to " + closest.SpaceCenterName + ", distance " + smallestDist);
 					}
 				}
 			}
@@ -74,12 +74,12 @@ namespace KerbalKonstructs.SpaceCenters
 				sc = KSC;
 			else
 			{
-				Debug.Log("KK: closest is " + closest.SpaceCenterName);
+				// Debug.Log("KK: closest is " + closest.SpaceCenterName);
 				sc = closest.getSpaceCenter() ?? KSC;
 			}
 
-			Debug.Log("KK: smallestDist is " + smallestDist);
-			Debug.Log("KK: returning closest space centre: " + sc.name);
+			// Debug.Log("KK: smallestDist is " + smallestDist);
+			// Debug.Log("KK: returning closest space centre: " + sc.name);
 
 			return sc;
 		}

@@ -53,7 +53,7 @@ namespace KerbalKonstructs.UI
 			Rect siteEditorRect = new Rect(400, 50, 340, 480);
 			Rect managerRect = new Rect(10, 25, 400, 405);
 			Rect facilityRect = new Rect(150, 75, 400, 620);
-			Rect NGSRect = new Rect(250, 50, 350, 150);
+			Rect NGSRect = new Rect(250, 50, 400, 150);
 			Rect KSCmanagerRect = new Rect(150, 50, 400, 400);
 			#endregion
 
@@ -80,6 +80,7 @@ namespace KerbalKonstructs.UI
 			String visrange = "";
 			String increment = "1";
 			String siteName, siteTrans, siteDesc, siteAuthor, siteCategory;
+			// static String sOtherName = "";
 			float flOpenCost, flCloseValue;		
 			float fOldRange = 0f;
 			// public string sKISAFunds = "0";
@@ -197,6 +198,8 @@ namespace KerbalKonstructs.UI
 			float Range;
 			LaunchSite lNearest;
 			LaunchSite lBase;
+			string smessage = "";
+			ScreenMessageStyle smsStyle = (ScreenMessageStyle)2;
 
 			GUILayout.BeginArea(new Rect(10, 30, 380, 380));
 				GUILayout.Space(3);
@@ -225,6 +228,8 @@ namespace KerbalKonstructs.UI
 							if (GUILayout.Button("NGS",GUILayout.Height(21)))
 							{
 								setTargetSite(lNearest);
+								smessage = "NGS set to " + Base;
+								ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 							}
 						}
 					GUILayout.EndHorizontal();
@@ -245,6 +250,9 @@ namespace KerbalKonstructs.UI
 						if (GUILayout.Button("NGS", GUILayout.Height(21)))
 						{
 							setTargetSite(lBase);
+
+							smessage = "NGS set to " + Base;
+							ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 						}
 					}
 				GUILayout.EndHorizontal();
@@ -277,6 +285,8 @@ namespace KerbalKonstructs.UI
 
 									// Open the site - save to instance
 									LaunchSiteManager.setSiteOpenCloseState(Base, "Open");
+									smessage = Base + " opened";
+									ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 								}
 							}
 						}
@@ -374,9 +384,13 @@ namespace KerbalKonstructs.UI
 			return (!double.IsNaN(latitude) ? latitude : 0.0);
 		}
 
-		public static void setTargetSite(LaunchSite lsTarget)
+		public static void setTargetSite(LaunchSite lsTarget, string sName = "")
 		{
 			lTargetSite = lsTarget;
+			/* if (sName != "")
+				sOtherName = sName;
+			else
+				sOtherName = ""; */
 		}
 
 		void prepNGS()
@@ -384,6 +398,10 @@ namespace KerbalKonstructs.UI
 			if (lTargetSite != null)
 			{
 				sTargetSiteName = lTargetSite.name;
+
+				/*if (sOtherName != "")
+					sTargetSiteName = sOtherName; */
+
 				fRangeToTarget = LaunchSiteManager.getDistanceToBase(FlightGlobals.ActiveVessel.GetTransform().position, lTargetSite);
 				if (fRangeToTarget > fOldRange) bClosing = false;
 				if (fRangeToTarget < fOldRange) bClosing = true;
@@ -477,17 +495,17 @@ namespace KerbalKonstructs.UI
 			GUILayout.Box(fRangeToTarget + " m", GUILayout.Height(20));
 
 			GUILayout.BeginHorizontal();
-				GUILayout.Box(tTextureLeft, GUILayout.Height(25), GUILayout.Width(155));
+				GUILayout.Box(tTextureLeft, GUILayout.Height(25), GUILayout.Width(180));
 				GUILayout.Box(tTextureMiddle, GUILayout.Height(25), GUILayout.Width(25));
-				GUILayout.Box(tTextureRight, GUILayout.Height(25), GUILayout.Width(155));			
+				GUILayout.Box(tTextureRight, GUILayout.Height(25), GUILayout.Width(180));			
 			GUILayout.EndHorizontal();
 
 			GUILayout.BeginHorizontal();
 				GUILayout.Box("CRFT", GUILayout.Width(60), GUILayout.Height(20));
 				GUILayout.Box("Lat.", GUILayout.Height(20));
-				GUILayout.Box(disLat.ToString("#0"), GUILayout.Width(35), GUILayout.Height(20));
+				GUILayout.Box(disLat.ToString("#0.00"), GUILayout.Width(60), GUILayout.Height(20));
 				GUILayout.Box("Lon.", GUILayout.Height(20));
-				GUILayout.Box(disLon.ToString("#0"), GUILayout.Width(35), GUILayout.Height(20));
+				GUILayout.Box(disLon.ToString("#0.00"), GUILayout.Width(60), GUILayout.Height(20));
 				GUILayout.Box("Head", GUILayout.Height(20));
 				GUILayout.Box(dshipheading.ToString("#0"), GUILayout.Width(35), GUILayout.Height(20));
 			GUILayout.EndHorizontal();
@@ -495,9 +513,10 @@ namespace KerbalKonstructs.UI
 			GUILayout.BeginHorizontal();
 				GUILayout.Box("BASE", GUILayout.Width(60), GUILayout.Height(20));
 				GUILayout.Box("Lat.", GUILayout.Height(20));
-				GUILayout.Box(disBaseLat.ToString("#0"), GUILayout.Width(35), GUILayout.Height(20));
+				GUILayout.Box(disBaseLat.ToString("#0.00"), GUILayout.Width(60), GUILayout.Height(20));
 				GUILayout.Box("Lon.", GUILayout.Height(20));
-				GUILayout.Box(disBaseLon.ToString("#0"), GUILayout.Width(35), GUILayout.Height(20));
+				if (disBaseLon < 0) disBaseLon = disBaseLon + 360;
+				GUILayout.Box(disBaseLon.ToString("#0.00"), GUILayout.Width(60), GUILayout.Height(20));
 				GUILayout.Box("Head", GUILayout.Height(20));
 				GUILayout.Box(dreqheading.ToString("#0"), GUILayout.Width(35), GUILayout.Height(20));
 			GUILayout.EndHorizontal();
@@ -507,11 +526,14 @@ namespace KerbalKonstructs.UI
 			prepNGS();
 		}
 		#endregion
-
+		
 			#region Facility Manager
 		// BASE BOSS FACILITY MANAGER
 		void drawFacilityManagerWindow(int windowID)
 		{
+			string smessage = "";
+			ScreenMessageStyle smsStyle = (ScreenMessageStyle)2;
+
 			string sFacilityName = (string)selectedObject.model.getSetting("title");
 			string sFacilityRole = (string)selectedObject.model.getSetting("FacilityRole");
 
@@ -591,6 +613,8 @@ namespace KerbalKonstructs.UI
 						bLqFIn = false;
 						bLqFOut = false;
 						saveStaticPersistence(selectedObject);
+						smessage = "Fuel transfer stopped";
+						ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 					}
 					GUI.enabled = true;
 				GUILayout.EndHorizontal();
@@ -631,15 +655,22 @@ namespace KerbalKonstructs.UI
 						}
 						else
 						{
-							double currentfunds = Funding.Instance.Funds;
-
-							if (fLqFCost > currentfunds)
+							if (isCareerGame())
 							{
-								ScreenMessages.PostScreenMessage("Insufficient funds!", 10, 0);
+								double currentfunds = Funding.Instance.Funds;
+
+								if (fLqFCost > currentfunds)
+								{
+									ScreenMessages.PostScreenMessage("Insufficient funds!", 10, 0);
+								}
+								else
+								{
+									Funding.Instance.AddFunds(-fLqFCost, TransactionReasons.Cheating);
+									selectedObject.setSetting("LqFCurrent", (float)selectedObject.getSetting("LqFCurrent") + (float.Parse(fLqFAmount)));
+								}
 							}
 							else
 							{
-								Funding.Instance.AddFunds(-fLqFCost, TransactionReasons.Cheating);
 								selectedObject.setSetting("LqFCurrent", (float)selectedObject.getSetting("LqFCurrent") + (float.Parse(fLqFAmount)));
 							}
 						}
@@ -694,6 +725,8 @@ namespace KerbalKonstructs.UI
 						bOxFIn = false;
 						bOxFOut = false;
 						saveStaticPersistence(selectedObject);
+						smessage = "Fuel transfer stopped";
+						ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 					}
 					GUI.enabled = true;
 				GUILayout.EndHorizontal();
@@ -734,15 +767,22 @@ namespace KerbalKonstructs.UI
 					}
 					else
 					{
-						double currentfunds = Funding.Instance.Funds;
-
-						if (fOxFCost > currentfunds)
+						if (isCareerGame())
 						{
-							ScreenMessages.PostScreenMessage("Insufficient funds!", 10, 0);
+							double currentfunds = Funding.Instance.Funds;
+
+							if (fOxFCost > currentfunds)
+							{
+								ScreenMessages.PostScreenMessage("Insufficient funds!", 10, 0);
+							}
+							else
+							{
+								Funding.Instance.AddFunds(-fOxFCost, TransactionReasons.Cheating);
+								selectedObject.setSetting("OxFCurrent", (float)selectedObject.getSetting("OxFCurrent") + (float.Parse(fOxFAmount)));
+							}
 						}
 						else
 						{
-							Funding.Instance.AddFunds(-fOxFCost, TransactionReasons.Cheating);
 							selectedObject.setSetting("OxFCurrent", (float)selectedObject.getSetting("OxFCurrent") + (float.Parse(fOxFAmount)));
 						}
 					}
@@ -797,6 +837,8 @@ namespace KerbalKonstructs.UI
 						bMoFIn = false;
 						bMoFOut = false;
 						saveStaticPersistence(selectedObject);
+						smessage = "Fuel transfer stopped";
+						ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 					}
 					GUI.enabled = true;
 				GUILayout.EndHorizontal();
@@ -837,15 +879,22 @@ namespace KerbalKonstructs.UI
 					}
 					else
 					{
-						double currentfunds = Funding.Instance.Funds;
-
-						if (fMoFCost > currentfunds)
+						if (isCareerGame())
 						{
-							ScreenMessages.PostScreenMessage("Insufficient funds!", 10, 0);
+							double currentfunds = Funding.Instance.Funds;
+
+							if (fMoFCost > currentfunds)
+							{
+								ScreenMessages.PostScreenMessage("Insufficient funds!", 10, 0);
+							}
+							else
+							{
+								Funding.Instance.AddFunds(-fMoFCost, TransactionReasons.Cheating);
+								selectedObject.setSetting("MoFCurrent", (float)selectedObject.getSetting("MoFCurrent") + (float.Parse(fMoFAmount)));
+							}
 						}
 						else
 						{
-							Funding.Instance.AddFunds(-fMoFCost, TransactionReasons.Cheating);
 							selectedObject.setSetting("MoFCurrent", (float)selectedObject.getSetting("MoFCurrent") + (float.Parse(fMoFAmount)));
 						}
 					}
@@ -875,18 +924,24 @@ namespace KerbalKonstructs.UI
 					{
 						fTransferRate = 0.01f;
 						saveStaticPersistence(selectedObject);
+						smessage = "Fuel transfer rate set to x1";
+						ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 					}
 					GUI.enabled = (fTransferRate != 0.04f);
 					if (GUILayout.Button("x4"))
 					{
 						fTransferRate = 0.04f;
 						saveStaticPersistence(selectedObject);
+						smessage = "Fuel transfer rate set to x4";
+						ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 					}
 					GUI.enabled = (fTransferRate != 0.1f);
 					if (GUILayout.Button("x10"))
 					{
 						fTransferRate = 0.1f;
 						saveStaticPersistence(selectedObject);
+						smessage = "Fuel transfer rate set to x10";
+						ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 					}
 					GUI.enabled = true;
 				GUILayout.EndHorizontal();
@@ -1044,7 +1099,7 @@ namespace KerbalKonstructs.UI
 			{
 				LockFuelTank();
 				managingFacility = false;
-				Debug.Log("KK: saveStaticPersistence");
+				// Debug.Log("KK: saveStaticPersistence");
 				saveStaticPersistence(selectedObject);
 				KerbalKonstructs.instance.deselectObject();
 			}
@@ -1191,6 +1246,9 @@ namespace KerbalKonstructs.UI
 		// STATICS EDITOR
 		void drawEditorWindow(int id)
 		{
+			string smessage = "";
+			ScreenMessageStyle smsStyle = (ScreenMessageStyle)2;
+
 			GUILayout.BeginArea(new Rect(10, 25, 500, 485));
 			GUILayout.BeginHorizontal();
 				GUI.enabled = !creatingInstance;
@@ -1218,6 +1276,8 @@ namespace KerbalKonstructs.UI
 				GUILayout.FlexibleSpace();
 				if (GUILayout.Button("Save Objects", GUILayout.Width(115)))
 					KerbalKonstructs.instance.saveObjects();
+					smessage = "Saved changes to objects";
+					ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 			GUILayout.EndHorizontal();
 
 			scrollPos = GUILayout.BeginScrollView(scrollPos);
@@ -1228,6 +1288,8 @@ namespace KerbalKonstructs.UI
 						if (GUILayout.Button(model.getSetting("title") + " : " + model.getSetting("mesh")))
 						{
 							spawnInstance(model);
+							smessage = "Spawned " + model.getSetting("title");
+							ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 						}
 					}
 				}
@@ -1275,6 +1337,8 @@ namespace KerbalKonstructs.UI
 				if (GUILayout.Button("Set as Group", GUILayout.Width(115)))
 				{
 					setLocalsGroup(customgroup);
+					smessage = "Set group as " + customgroup;
+					ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 				}
 				GUI.enabled = true;
 			GUILayout.EndHorizontal();
@@ -1317,6 +1381,8 @@ namespace KerbalKonstructs.UI
 		// INSTANCE EDITOR
 		void drawToolWindow(int windowID)
 		{
+			string smessage = "";
+			ScreenMessageStyle smsStyle = (ScreenMessageStyle)2;
 			Vector3 position = Vector3.zero;
 			float alt = 0;
 			float newRot = 0;
@@ -1520,8 +1586,10 @@ namespace KerbalKonstructs.UI
 						float fOffset = (float)selectedObject.getSetting("RadiusOffset");
 						Vector3 vPosition = (Vector3)selectedObject.getSetting("RadialPosition");
 						float fAngle = (float)selectedObject.getSetting("RotationAngle");
+						smessage = "Spawned duplicate " + selectedObject.getSetting("title");
 						KerbalKonstructs.instance.deselectObject();
 						spawnInstance(oModel, fOffset, vPosition, fAngle);
+						ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 					}
 				GUILayout.EndHorizontal();
 
@@ -1873,7 +1941,7 @@ namespace KerbalKonstructs.UI
 				cnHolder.AddNode(newStatic);
 			}
 
-			Debug.Log("KK: rootNode.save");
+			// Debug.Log("KK: rootNode.save");
 			rootNode.Save(saveConfigPath);
 		}
 

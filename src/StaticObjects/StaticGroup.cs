@@ -59,11 +59,23 @@ namespace KerbalKonstructs.StaticObjects
 			centerPoint = center;
 		}
 
+		public static void SetActiveRecursively(GameObject rootObject, bool active)
+		{
+			rootObject.SetActive(active);
+
+			foreach (Transform childTransform in rootObject.transform)
+			{
+				SetActiveRecursively(childTransform.gameObject, active);
+			}
+		}
+
 		public void cacheAll()
 		{
 			foreach (StaticObject obj in childObjects)
 			{
-				obj.gameObject.SetActive(false);
+				// obj.gameObject.SetActive(false);
+
+				SetActiveRecursively(obj.gameObject, false);
 			}
 		}
 
@@ -76,14 +88,15 @@ namespace KerbalKonstructs.StaticObjects
 				if (visible != obj.gameObject.activeSelf)
 				{
 					// Debug.Log("KK: Setting " + obj.gameObject.name + " to visible =" + visible);
-					obj.gameObject.SetActive(visible);
+					// obj.gameObject.SetActive(visible);
+					SetActiveRecursively(obj.gameObject, visible);
 
 					// ASH 06112014
 					// What if SetActive isn't actually properly activating children?
-					Transform[] gameObjectList = obj.gameObject.GetComponentsInChildren<Transform>(true);
-					List<GameObject> rendererList = (from t in gameObjectList where t.gameObject.renderer != null select t.gameObject).ToList();
+					// Transform[] gameObjectList = obj.gameObject.GetComponentsInChildren<Transform>(true);
+					// List<GameObject> rendererList = (from t in gameObjectList where t.gameObject.renderer != null select t.gameObject).ToList();
 					
-					foreach (GameObject renderer in rendererList)
+					/* foreach (GameObject renderer in rendererList)
 					{
 						// Debug.Log("KK: Child activeself is " + renderer.activeSelf);
 						bool childVisible = renderer.activeSelf;
@@ -92,7 +105,7 @@ namespace KerbalKonstructs.StaticObjects
 							// Debug.Log("KK: Setting child active!");
 							renderer.SetActive(true);
 						}
-					}
+					} */
 				}
 			}
 		}

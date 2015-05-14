@@ -233,7 +233,13 @@ namespace KerbalKonstructs.UI
 											{
 												ScreenMessages.PostScreenMessage("Selected base is " + site.name + ".", 5f, ScreenMessageStyle.LOWER_CENTER);
 												selectedSite = site;
-												EditorGUI.setTargetSite(site);
+												EditorGUI.setTargetSite(selectedSite);
+
+												/* if (site.name == "Runway")
+													EditorGUI.setTargetSite(site, "Runway");
+
+												if (site.name == "LaunchPad")
+													EditorGUI.setTargetSite(site, "LaunchPad"); */
 
 												if (HighLogic.LoadedSceneIsFlight)
 												{

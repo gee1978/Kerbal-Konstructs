@@ -24,12 +24,12 @@ namespace KerbalKonstructs
 				csc.staticObject = staticObject;
 				csc.gameObject = go;
 
-				Debug.Log("KK: CreateFromLaunchsite added Space Center " + name);
+				// Debug.Log("KK: CreateFromLaunchsite added Space Center " + name);
 				SpaceCenterManager.addSpaceCenter(csc);
 			}
 			else
 			{
-				Debug.Log("KK: CreateFromLaunchsite failed because staticObject is null.");
+				// Debug.Log("KK: CreateFromLaunchsite failed because staticObject is null.");
 			}
 		}
 
@@ -41,7 +41,7 @@ namespace KerbalKonstructs
 				spaceCenter.cb = (CelestialBody)staticObject.getSetting("CelestialBody");
 				spaceCenter.name = SpaceCenterName;
 
-				Debug.Log("KK: getSpaceCenter set spaceCenter.name to " + SpaceCenterName);
+				// Debug.Log("KK: getSpaceCenter set spaceCenter.name to " + SpaceCenterName);
 
 				FieldInfo lat = spaceCenter.GetType().GetField("\u0002", BindingFlags.NonPublic | BindingFlags.Instance);
 				lat.SetValue(spaceCenter, spaceCenter.cb.GetLatitude(gameObject.transform.position));
@@ -52,7 +52,7 @@ namespace KerbalKonstructs
 			}
 			else
 			{
-				Debug.Log("KK: getSpaceCenter was not null.");
+				// Debug.Log("KK: getSpaceCenter was not null.");
 			}
 
 			return spaceCenter;

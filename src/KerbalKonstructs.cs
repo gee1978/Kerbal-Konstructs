@@ -95,7 +95,7 @@ namespace KerbalKonstructs
 		void Awake()
 		{
 			instance = this;
-			Debug.Log("KK: Awake");
+			// Debug.Log("KK: Awake");
 
 			#region Game Event Additions
 			// Game Event Additions
@@ -226,22 +226,22 @@ namespace KerbalKonstructs
 
 		void OnKSCFacilityUpgraded(Upgradeables.UpgradeableFacility Facility, int iLevel)
 		{
-			Debug.Log("KK: FacilityUpgraded " + Facility + " " + iLevel);
+			// Debug.Log("KK: FacilityUpgraded " + Facility + " " + iLevel);
 		}
 
 		void OnKSCFacilityUpgrading(Upgradeables.UpgradeableFacility Facility, int iLevel)
 		{
-			Debug.Log("KK: FacilityUpgrading " + Facility + " " + iLevel);
+			// Debug.Log("KK: FacilityUpgrading " + Facility + " " + iLevel);
 		}
 
 		void OnUpgradeableObjLevelChange(Upgradeables.UpgradeableObject uObject, int iLevel)
 		{
-			Debug.Log("KK: UpgradeableObjLevelChange " + uObject + " " + iLevel);
+			// Debug.Log("KK: UpgradeableObjLevelChange " + uObject + " " + iLevel);
 		}
 
 		void OnDoshChanged(double amount, TransactionReasons reason)
 		{
-			Debug.Log("KK: Funds changed - " + amount + " because " + reason);
+			// Debug.Log("KK: Funds changed - " + amount + " because " + reason);
 		}
 
 		void OnVesselRecoveryRequested(Vessel data)
@@ -251,8 +251,8 @@ namespace KerbalKonstructs
 				// Change the Space Centre to the nearest open base
 				SpaceCenter csc = SpaceCenterManager.getClosestSpaceCenter(data.gameObject.transform.position);
 				SpaceCenter.Instance = csc;
-				Debug.Log("KK: event onVesselRecoveryRequested");
-				Debug.Log("KK: Nearest SpaceCenter is " + SpaceCenter.Instance.name + " " + csc.name);
+				// Debug.Log("KK: event onVesselRecoveryRequested");
+				// Debug.Log("KK: Nearest SpaceCenter is " + SpaceCenter.Instance.name + " " + csc.name);
 			}
 		}
 
@@ -264,7 +264,7 @@ namespace KerbalKonstructs
 			if (CareerStrategyEnabled(HighLogic.CurrentGame))
 			{
 				// Put the KSC back as the Space Centre
-				Debug.Log("KK: Resetting SpaceCenter to KSC");
+				// Debug.Log("KK: Resetting SpaceCenter to KSC");
 				SpaceCenter.Instance = SpaceCenterManager.KSC;
 			}
 		}
@@ -297,22 +297,22 @@ namespace KerbalKonstructs
 
 		public void LoadState(ConfigNode configNode)
 		{
-			Debug.Log("KK: LoadState");
+			// Debug.Log("KK: LoadState");
 		}
 
 		public void SaveState(ConfigNode configNode)
 		{
-			Debug.Log("KK: SaveState");
+			// Debug.Log("KK: SaveState");
 		}
 
 		void onLevelWasLoaded(GameScenes data)
 		{
-			Debug.Log("KK: onLevelWasLoaded");
+			// Debug.Log("KK: onLevelWasLoaded");
 			bool something = true;
 			
 			if (selectedObject != null)
 			{
-				Debug.Log("KK: Deselecting an object.");
+				// Debug.Log("KK: Deselecting an object.");
 				deselectObject(false);
 				camControl.active = false;
 			}
@@ -322,7 +322,7 @@ namespace KerbalKonstructs
 			{
 				// ASH 04112014 Likely responsible for camera locks in the flight and space centre scenes
 				InputLockManager.RemoveControlLock("KKEditorLock");
-				updateCache();
+				// updateCache();
 				InvokeRepeating("updateCache", 0, 1);
 				something = false;
 			}
@@ -352,13 +352,13 @@ namespace KerbalKonstructs
 			if (data.Equals(GameScenes.MAINMENU))
 			{
 				// Close all the launchsite objects
-				Debug.Log("KK: Closing all launchsites");
+				// Debug.Log("KK: Closing all launchsites");
 				LaunchSiteManager.setAllLaunchsitesClosed();
 				atMainMenu = true;
 				something = false;
 				iMenuCount = iMenuCount + 1;
 				InitialisedFacilities = false;
-				Debug.Log("KK: Reset InitialisedFacilities check");
+				// Debug.Log("KK: Reset InitialisedFacilities check");
 			}
 			
 			if (data.Equals(GameScenes.EDITOR))
@@ -373,7 +373,7 @@ namespace KerbalKonstructs
 						selector.setEditorType(SiteType.SPH);
 						if (atMainMenu)
 						{
-							Debug.Log("KK: First visit to SPH");
+							// Debug.Log("KK: First visit to SPH");
 							LaunchSiteManager.setLaunchSite(LaunchSiteManager.runway);
 							atMainMenu = false;
 						}
@@ -382,7 +382,7 @@ namespace KerbalKonstructs
 						selector.setEditorType(SiteType.VAB);
 						if (atMainMenu)
 						{
-							Debug.Log("KK: First visit to VAB");
+							// Debug.Log("KK: First visit to VAB");
 							LaunchSiteManager.setLaunchSite(LaunchSiteManager.launchpad);
 							atMainMenu = false;
 						}
@@ -403,6 +403,7 @@ namespace KerbalKonstructs
 		{
 			currentBody = data.to;
 			staticDB.onBodyChanged(data.to);
+			// Debug.Log("KK: onDominantBodyChange");
 		}
 
 		public void updateCache()
@@ -431,7 +432,7 @@ namespace KerbalKonstructs
 			}
 			else
 			{
-				Debug.Log("KK: KerbalKonstructs.updateCache not HighLogic.LoadedSceneIsGame. Why is this an if?");
+				//Debug.Log("KK: KerbalKonstructs.updateCache not HighLogic.LoadedSceneIsGame. Why is this an if?");
 			}
 		}
 
@@ -519,7 +520,7 @@ namespace KerbalKonstructs
 					continue;
 				}
 
-				Debug.Log("KK: Career has object instances in " + savedObjectPath);
+				// Debug.Log("KK: Career has object instances in " + savedObjectPath);
 
 				ConfigNode CareerConfig = ConfigNode.Load(savedObjectPath);
 				ConfigNode CareerConfigRoot = CareerConfig.GetNode("STATIC");
@@ -544,14 +545,14 @@ namespace KerbalKonstructs
 				{
 					if ((string)model.getSetting("LocalToSave") == "True")
 					{
-						Debug.Log("KK: Static Config is local to save. Skipping model and its instances.");
+						// Debug.Log("KK: Static Config is local to save. Skipping model and its instances.");
 						continue;
 					}
 				}
 
 				foreach (ConfigNode ins in conf.config.GetNodes("MODULE"))
 				{
-					Debug.Log("KK: Found module: "+ins.name+" in "+conf.name);
+					// Debug.Log("KK: Found module: "+ins.name+" in "+conf.name);
 					StaticModule module = new StaticModule();
 					foreach (ConfigNode.Value value in ins.values)
 					{
@@ -569,7 +570,7 @@ namespace KerbalKonstructs
 						}
 					}
 					model.modules.Add(module);
-					Debug.Log("KK: Adding module");
+					// Debug.Log("KK: Adding module");
 				}
 
 				loadInstances(conf.config, model);
@@ -620,7 +621,7 @@ namespace KerbalKonstructs
 			if (objvisibleRange < 1)
 			{
 				objvisibleRange = 25000f;
-				Debug.Log("KK: Object had no VisibilityRange set. Defaulting to 25000m");
+				// Debug.Log("KK: Object had no VisibilityRange set. Defaulting to 25000m");
 			}
 
 			PQSCity.LODRange range = new PQSCity.LODRange
@@ -754,11 +755,11 @@ namespace KerbalKonstructs
 						}
 					}
 
-					Debug.Log("KK: loadCareerObjects");
+					// Debug.Log("KK: loadCareerObjects");
 					loadCareerObjects();
 
 					InitialisedFacilities = true;
-					Debug.Log("KK: InitialisedFacilities check complete");
+					// Debug.Log("KK: InitialisedFacilities check complete");
 				}
 			}
 
@@ -929,7 +930,7 @@ namespace KerbalKonstructs
 			}
 			else
 			{
-				Debug.Log("KK: setLayerRecursively did not set a layer to " + newLayerNumber + " because ??? if statement is a bloody mess");
+				// Debug.Log("KK: setLayerRecursively did not set a layer to " + newLayerNumber + " because ??? if statement is a bloody mess");
 			}
 
 			foreach (Transform child in sGameObject.transform)

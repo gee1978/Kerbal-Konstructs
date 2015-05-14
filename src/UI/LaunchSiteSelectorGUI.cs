@@ -21,7 +21,7 @@ namespace KerbalKonstructs.UI
 		private float iFundsOpen = 0;
 
 		// ASH 28102014 - Needs to be bigger for filter
-		Rect windowRect = new Rect(((Screen.width - Camera.main.rect.x) / 2) + Camera.main.rect.x - 125, (Screen.height / 2 - 250), 700, 580);
+		Rect windowRect = new Rect(((Screen.width - Camera.main.rect.x) / 2) + Camera.main.rect.x - 125, (Screen.height / 2 - 250), 570, 580);
 
 		public Boolean isCareerGame()
 		{
@@ -65,6 +65,8 @@ namespace KerbalKonstructs.UI
 
 		public void drawSelectorWindow(int id)
 		{
+			string smessage = "";
+			ScreenMessageStyle smsStyle = (ScreenMessageStyle)2;
 			// ASH 28102014 Category filter handling added.
 			// ASH 07112014 Disabling of restricted categories added.
 			GUILayout.BeginArea(new Rect(10, 25, 370, 550));
@@ -132,7 +134,11 @@ namespace KerbalKonstructs.UI
 						// In career the launchsite is not set by the launchsite list but rather in the launchsite description
 						// panel on the right
 						if (!isCareerGame())
+						{
 							LaunchSiteManager.setLaunchSite(site);
+							smessage = "Launchsite set to " + site.name;
+							ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
+						}
 					}
 					GUI.enabled = true;
 					if (isCareerGame())
@@ -187,9 +193,13 @@ namespace KerbalKonstructs.UI
 		// ASH 05112014 Having the right panel always drawn might fix the selector centering issue on the right panel
 		private void drawRightSelectorWindow()
 		{
-			GUILayout.BeginArea(new Rect(385, 25, 310, 550));
-				GUILayout.Label(selectedSite.logo, GUILayout.Height(280), GUILayout.Width(300));
-				GUILayout.Label(selectedSite.name + " By " + selectedSite.author);
+			string smessage = "";
+			ScreenMessageStyle smsStyle = (ScreenMessageStyle)2;
+
+			GUILayout.BeginArea(new Rect(385, 25, 180, 550));
+				GUILayout.Box(selectedSite.name);
+				GUILayout.Box("By " + selectedSite.author);
+				GUILayout.Box(selectedSite.logo);
 				
 				descriptionScrollPosition = GUILayout.BeginScrollView(descriptionScrollPosition);
 				GUI.enabled = false;
@@ -248,6 +258,9 @@ namespace KerbalKonstructs.UI
 
 								// Save new state to persistence
 								PersistenceFile<LaunchSite>.SaveList(sites, "LAUNCHSITES", "KK");
+
+								smessage = selectedSite.name + " has been opened";
+								ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 							}
 						}
 					}
@@ -263,6 +276,9 @@ namespace KerbalKonstructs.UI
 							Funding.Instance.AddFunds(iFundsClose, TransactionReasons.Cheating);
 							selectedSite.openclosestate = "Closed";
 
+							smessage = selectedSite.name + " has been closed";
+							ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
+
 							// Save new state to persistence
 							PersistenceFile<LaunchSite>.SaveList(sites, "LAUNCHSITES", "KK");
 						}
@@ -275,6 +291,8 @@ namespace KerbalKonstructs.UI
 					if (GUILayout.Button("Set as Launchsite"))
 					{
 						LaunchSiteManager.setLaunchSite(selectedSite);
+						smessage = selectedSite.name + " has been set as the launchsite";
+						ScreenMessages.PostScreenMessage(smessage, 10, smsStyle);
 					}
 					GUI.enabled = true;
 				}

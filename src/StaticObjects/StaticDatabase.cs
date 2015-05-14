@@ -50,7 +50,7 @@ namespace KerbalKonstructs.StaticObjects
 		public void cacheAll()
 		{
 			// ASH 01112014 Need to handle this.
-			// Debug.Log("KK: cacheAll() activeBodyname is " + activeBodyName);
+			// Debug.Log("KK: StaticDatabase cacheAll() activeBodyname is " + activeBodyName);
 			if (activeBodyName == "")
 				return;
 
@@ -93,7 +93,7 @@ namespace KerbalKonstructs.StaticObjects
 			}
 			else
 			{
-				Debug.Log("KK: No statics exist for " + bodyName);
+				// Debug.Log("KK: No statics exist for " + bodyName);
 			}
 		}
 
@@ -101,18 +101,24 @@ namespace KerbalKonstructs.StaticObjects
 		{
 			if (body != null)
 			{
-				// Debug.Log("KK: onBodyChanged() body.bodyName is " + body.bodyName);
-				// Debug.Log("KK: onBodyChanged() activebodyName is " + activeBodyName);
+				// Debug.Log("KK: StaticDatabase onBodyChanged() body.bodyName is " + body.bodyName);
+				// Debug.Log("KK: Staticdatabase onBodyChanged() activebodyName is " + activeBodyName);
 				if (body.bodyName != activeBodyName)
 				{
-					// Debug.Log("KK: onBodyChanged() calls cacheAll() then loadObjectsForBody()");
+					// Debug.Log("KK: Staticdatabase onBodyChanged() calls cacheAll() then loadObjectsForBody()");
 					cacheAll();
 					loadObjectsForBody(body.bodyName);
+					activeBodyName = body.bodyName;
 				}
+				// else
+				// {
+					// Debug.Log("KK: Staticdatabase body.bodyname IS activebodyname so onBodyChanged() calls loadObjectsForBody()");
+					// loadObjectsForBody(body.bodyName);
+				// }
 			}
 			else
 			{
-				// Debug.Log("KK: onBodyChanged() calls cacheAll() THEN sets activeBodyName blank");
+				// Debug.Log("KK: Staticdatabase onBodyChanged() body is null");
 				cacheAll();
 				activeBodyName = "";
 			}
@@ -131,7 +137,7 @@ namespace KerbalKonstructs.StaticObjects
 						Boolean active = dist < group.getVisibilityRange();
 						if (active != group.active && active == false)
 						{
-							// Debug.Log("KK: Caching group " + group.getGroupName());
+							// Debug.Log("KK: Staticdatabase Caching group " + group.getGroupName());
 							group.cacheAll();
 						}
 						group.active = active;
@@ -157,12 +163,12 @@ namespace KerbalKonstructs.StaticObjects
 				}
 				else
 				{
-					Debug.Log("KK: Group not found! " + groupName);
+					// Debug.Log("KK: Group not found! " + groupName);
 				}
 			}
 			else
 			{
-				Debug.Log("KK: Body not found! " + bodyName);
+				// Debug.Log("KK: Body not found! " + bodyName);
 			}
 		}
 

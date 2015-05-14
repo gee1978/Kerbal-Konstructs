@@ -17,8 +17,8 @@ namespace KerbalKonstructs.LaunchSites
 		private static List<LaunchSite> launchSites = new List<LaunchSite>();
 		public static Texture defaultLaunchSiteLogo = GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/DefaultSiteLogo", false);
 
-		public static LaunchSite runway = new LaunchSite("Runway", "Squad", SiteType.SPH, GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/KSCRunway", false), null, "The KSC runway is a concrete runway measuring about 2.5km long and 70m wide, on a magnetic heading of 90/270. It is not uncommon to see burning chunks of metal sliding across the surface.", "Runway", 0, 0, "Open", null/*, new PSystemSetup.SpaceCenterFacility()*/);
-		public static LaunchSite launchpad = new LaunchSite("LaunchPad", "Squad", SiteType.VAB, GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/KSCLaunchpad", false), null, "The KSC launchpad is a platform used to fire screaming Kerbals into the kosmos. There was a tower here at one point but for some reason nobody seems to know where it went...", "RocketPad", 0, 0, "Open", null/*, new PSystemSetup.SpaceCenterFacility()*/);
+		public static LaunchSite runway = new LaunchSite("Runway", "Squad", SiteType.SPH, GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/KSCRunway", false), null, "The KSC runway is a concrete runway measuring about 2.5km long and 70m wide, on a magnetic heading of 90/270. It is not uncommon to see burning chunks of metal sliding across the surface.", "Runway", 0, 0, "Open", SpaceCenter.Instance.gameObject/*, new PSystemSetup.SpaceCenterFacility()*/);
+		public static LaunchSite launchpad = new LaunchSite("LaunchPad", "Squad", SiteType.VAB, GameDatabase.Instance.GetTexture("medsouz/KerbalKonstructs/Assets/KSCLaunchpad", false), null, "The KSC launchpad is a platform used to fire screaming Kerbals into the kosmos. There was a tower here at one point but for some reason nobody seems to know where it went...", "RocketPad", 0, 0, "Open", SpaceCenter.Instance.gameObject/*, new PSystemSetup.SpaceCenterFacility()*/);
 
 		static LaunchSiteManager()
 		{
@@ -251,13 +251,15 @@ namespace KerbalKonstructs.LaunchSites
 
 				if (sOpenCloseState == "Open")
 				{
-					if (site.GameObject == null) continue;
 					var radialposition = site.GameObject.transform.position;
 					var dist = Vector3.Distance(position, radialposition);
 
-					if (site.name == "Runway" || site.name == "LaunchPad")
-					{ }
-					else
+					if (site.name == "Runway")
+					{
+						if (lNearestBase == null)
+							lNearestBase = site;
+					}
+					else if (site.name != "LaunchPad")
 					{
 						if ((float)dist < (float)smallestDist)
 						{
@@ -356,7 +358,7 @@ namespace KerbalKonstructs.LaunchSites
 
 		public static void setLaunchSite(LaunchSite site)
 		{
-			Debug.Log("KK: EditorLogic.fetch.launchSiteName set to " + site.name);
+			// Debug.Log("KK: EditorLogic.fetch.launchSiteName set to " + site.name);
 			//Trick KSP to think that you launched from Runway or LaunchPad
 			//I'm sure Squad will break this in the future
 			//This only works because they use multiple variables to store the same value, basically its black magic.
