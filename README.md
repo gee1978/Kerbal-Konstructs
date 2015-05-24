@@ -3,23 +3,29 @@ Kerbal Konstructs
 
 What is it?
 -----------
-Kerbal Konstructs is a reimplementation of the popular [KerbTown](http://forum.kerbalspaceprogram.com/threads/40374-WIP-KerbTown-v0-13-Beta-Place-static-buildings-cities-launch-sites-more!) mod by Razchek. The goal is to remain completely compatible with KerbTown asset packs while also providing optimizations that are not present in the original mod.
+Kerbal Konstructs is a reimplementation of the popular [KerbTown](http://forum.kerbalspaceprogram.com/threads/40374-WIP-KerbTown-v0-13-Beta-Place-static-buildings-cities-launch-sites-more!) mod by Razchek. medsouz's original goal was to remain completely compatible with KerbTown asset packs while also providing optimizations that are not present in the original mod. The goal of this fork is to provide new features as well as optimisations without concern for KerbTown compatibility. This fork abandons it.
 
 FAQ
 ---
 **Why not just contribute to KerbTown?**
 
-The only real reason that this is a standalone mod instead of a fork of KerbTown is that I wanted to respect the original authors of KerbTown and not add features to their mod that they wouldn't agree with. By having my own mod I am given full freedom to add whatever crazy ideas I might come up with.
+KerbTown is very dead. If the original authors of that mod choose to continue it, I may pursue merging this fork back in. I probably won't. This will just keep going on its merry way.
+
+**What about medsouz?**
+
+This is a fork of his work and I consider medsouz a friend. His involvement with this fork and my relationship with him and our collaboration or the future of it isn't something you need to worry about.
 
 **Why should I use this instead of KerbTown?**
 
-You can use whatever you prefer, asset packs for either mod should work together seamlessly as I am trying to maintain full compatibility with KerbTown. Some advantages of using this mod though are that you get to take advantage of my optimizations that solve the Krakensbane lag issue in KerbTown described [here](http://forum.kerbalspaceprogram.com/threads/82785-0-24-x-Kerbin-Side-v0-34-Now-With-More-Crate?p=1247712&viewfull=1#post1247712) (I have simple version of this in my fork of KerbTown [here](https://github.com/medsouz/KerbTown)) as well as whatever additional features I add in the future.
+You can use whatever you prefer.
+
+However, asset packs for either mod won't necessarily work together seamlessly anymore as I am not remotely trying to maintain full compatibility with KerbTown.
 
 License
 -------
 The MIT License (MIT)
 
-Copyright (c) 2014 Matt *"medsouz"* Souza
+Copyright (c) 2014-2015 Matt *"medsouz"* Souza, Ashley *"AlphaAsh" Hall
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
