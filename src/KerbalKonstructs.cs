@@ -1003,7 +1003,7 @@ namespace KerbalKonstructs
 
 		public bool loadConfig()
 		{
-			ConfigNode cfg = ConfigNode.Load(installDir + @"\KerbalKonstructs.cfg".Replace('/', '\\'));
+			ConfigNode cfg = ConfigNode.Load (installDir + Path.DirectorySeparatorChar + "KerbalKonstructs.cfg");
 			if (cfg != null)
 			{
 				foreach (FieldInfo f in GetType().GetFields())
@@ -1039,7 +1039,7 @@ namespace KerbalKonstructs
 			}
 
 			Directory.CreateDirectory(installDir);
-			cfg.Save(installDir + "/KerbalKonstructs.cfg", "Kerbal Konstructs - https://github.com/medsouz/Kerbal-Konstructs");
+			cfg.Save(installDir + Path.DirectorySeparatorChar + "KerbalKonstructs.cfg", "Kerbal Konstructs - https://github.com/medsouz/Kerbal-Konstructs");
 		}
 	}
 }
